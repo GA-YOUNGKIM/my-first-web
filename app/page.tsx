@@ -21,37 +21,41 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-gray-800">
-      <header className="border-b border-slate-200 bg-white">
+    <>
+      <header className="border-b border-gray-200 bg-white">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-6">
           <h1 className="text-3xl font-bold">My Dev Blog</h1>
           <nav>
-            <ul className="flex gap-4 text-sm font-medium text-slate-600">
-              <li><a href="#" className="hover:text-slate-900">홈</a></li>
-              <li><a href="#" className="hover:text-slate-900">포스트</a></li>
-              <li><a href="#" className="hover:text-slate-900">소개</a></li>
-              <li><a href="#" className="hover:text-slate-900">연락</a></li>
+            <ul className="flex gap-6 text-sm font-medium text-gray-600">
+              <li><a href="#">홈</a></li>
+              <li><a href="#">포스트</a></li>
+              <li><a href="#">소개</a></li>
+              <li><a href="#">연락</a></li>
             </ul>
           </nav>
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl space-y-6 px-4 py-8">
-        {posts.map((post) => (
-          <article key={post.title} className="bg-white rounded-lg shadow p-6 transition-shadow duration-200 hover:shadow-lg">
-            <h2 className="text-lg font-bold text-slate-900">{post.title}</h2>
+      <main className="mx-auto max-w-4xl px-4 py-8">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {posts.map((post) => (
+            <article key={post.title} className="rounded-lg bg-white p-6 shadow transition hover:shadow-lg">
+            <h2 className="text-lg font-bold">{post.title}</h2>
             <p className="mt-3 text-gray-600">{post.excerpt}</p>
             <div className="mt-4 flex items-center justify-between text-sm text-gray-400">
               <span>작성자: {post.author}</span>
               <time dateTime={post.date}>{post.date}</time>
             </div>
           </article>
-        ))}
+          ))}
+        </div>
       </main>
 
-      <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto max-w-5xl px-4 py-4 text-sm text-slate-600">© 2026 My Dev Blog. All rights reserved.</div>
+      <footer className="border-t border-gray-200 bg-white">
+        <div className="mx-auto max-w-4xl px-4 py-6 text-center">
+          <p className="text-sm text-gray-400">© 2026 My Dev Blog. All rights reserved.</p>
+        </div>
       </footer>
-    </div>
+    </>
   );
 }
