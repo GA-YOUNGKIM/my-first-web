@@ -6,7 +6,7 @@ export type Post = {
   date: string;
 };
 
-export const posts: Post[] = [
+export const seedPosts: Post[] = [
   {
     id: 1,
     title: "Next.js App Router 시작하기",

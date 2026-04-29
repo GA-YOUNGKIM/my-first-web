@@ -2,23 +2,44 @@
 
 ## 현재 상태
 
-- 마지막 작업일: 2026-02-26
-- 완료된 작업: 홈 페이지, 헤더/푸터 레이아웃, 포스트 목록
-- 진행 중: 포스트 상세 페이지 (UI 완료, 데이터 연결 미완)
-- 미착수: 마이페이지
+- 마지막 작업일: 2026-04-29
+- 완료된 작업: 홈 페이지, 헤더/푸터 레이아웃, 포스트 목록/상세/작성/수정(파일 기반 CRUD), 데이터베이스 스키마, ARCHITECTURE 문서 보강
+- 진행 중: Supabase 프로젝트 생성 및 Auth 연동
+- 미착수: 마이페이지, 댓글 기능
+
+## 오늘 변경 파일
+
+- app/page.tsx
+- app/posts/page.tsx
+- app/posts/new/page.tsx
+- app/posts/[id]/page.tsx
+- app/posts/[id]/edit/page.tsx
+- app/posts/actions.ts
+- lib/post-repository.ts
+- lib/posts.ts
+- app/globals.css
+- ARCHITECTURE.md
+- todo.md
 
 ## 기술 결정 사항
 
-- 인증: Supabase Auth (Email)
-- 상태관리: React Context (AuthProvider)
-- 이미지: Supabase Storage 사용 예정
+- 라우팅: Next.js App Router only (pages router, next/router 미사용)
+- UI: shadcn/ui(Button, Card, Input, Dialog) 우선 사용
+- 데이터 흐름: Server Action + revalidatePath + redirect 패턴 사용
+- 저장소: 현재는 data/posts.json 기반, 이후 Supabase(PostgreSQL)로 마이그레이션
+- 인증 방향: Supabase Auth (이메일/비밀번호)
 
 ## 해결된 이슈
 
-- shadcn/ui Button variant가 디자인 토큰과 불일치 → globals.css의 --primary 수정으로 해결
-- 모바일 헤더 메뉴가 겹침 → Sheet 컴포넌트로 교체
+- 기존 하드코딩 스타일과 shadcn/ui 스타일 혼재 문제 해결: 주요 페이지를 Card/Button/Input/Dialog 중심으로 통일
+- 모바일 레이아웃 겹침/정렬 문제 해결: `flex-col sm:flex-row`, 반응형 padding/spacing으로 정리
+- 글 작성 페이지의 클라이언트 임시 상태 로직 제거: Server Action 기반 실제 CRUD 흐름으로 전환
+- 삭제 확인 UX 보강: 상세 페이지 삭제 동작에 Dialog 확인 단계 적용
+- 디자인 토큰 불일치 보정: `:root`의 `--primary`, `--primary-foreground` 값 요청안으로 반영
 
 ## 알게 된 점
 
-- Tailwind CSS 4 기준에서는 `@import "tailwindcss"` + `@theme` 블록으로 설정 (`tailwind.config.js` 불필요)
-- Server Component에서 useRouter 사용 불가 → redirect() 사용
+- Tailwind CSS 4 + shadcn 구성에서 색상은 토큰(`text-foreground`, `bg-card`, `border-border`) 기준으로 맞출 때 유지보수가 쉬움
+- App Router 환경에서는 폼 처리에 Server Action(`"use server"`)을 쓰면 Client 상태 코드 없이도 CRUD 구현 가능
+- `get_errors`의 `@theme`, `@apply` 경고는 Tailwind 전용 문법을 일반 CSS 검사기가 인식하지 못해 나타날 수 있음
+- 문서(ARCHITECTURE)와 실제 코드(컴포넌트/데이터 흐름)를 함께 갱신해야 다음 작업(인증/DB 마이그레이션)이 빨라짐
