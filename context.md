@@ -3,18 +3,24 @@
 ## 현재 상태
 
 - 마지막 작업일: 2026-04-29
-- 완료된 작업: 홈 페이지, 헤더/푸터 레이아웃, 포스트 목록/상세/작성/수정(파일 기반 CRUD), 데이터베이스 스키마, ARCHITECTURE 문서 보강
-- 진행 중: Supabase 프로젝트 생성 및 Auth 연동
+- 완료된 작업: 홈 페이지, 헤더/푸터 레이아웃, 포스트 목록/상세/작성/수정(파일 기반 CRUD), 데이터베이스 스키마, 로그인/회원가입(Supabase Auth 액션), 스케치 기반 홈 레이아웃 변환, ARCHITECTURE 문서 보강
+- 진행 중: Supabase 프로젝트 생성 및 환경변수 연결
 - 미착수: 마이페이지, 댓글 기능
 
 ## 오늘 변경 파일
 
 - app/page.tsx
+- components/sketch-home.tsx
+- app/login/page.tsx
+- app/signup/page.tsx
+- app/auth/actions.ts
 - app/posts/page.tsx
 - app/posts/new/page.tsx
 - app/posts/[id]/page.tsx
 - app/posts/[id]/edit/page.tsx
 - app/posts/actions.ts
+- lib/supabase/client.ts
+- lib/supabase/server.ts
 - lib/post-repository.ts
 - lib/posts.ts
 - app/globals.css
@@ -28,6 +34,7 @@
 - 데이터 흐름: Server Action + revalidatePath + redirect 패턴 사용
 - 저장소: 현재는 data/posts.json 기반, 이후 Supabase(PostgreSQL)로 마이그레이션
 - 인증 방향: Supabase Auth (이메일/비밀번호)
+- Supabase 서버 클라이언트: `@supabase/ssr` + 비동기 `cookies()` 패턴 사용
 
 ## 해결된 이슈
 
@@ -36,6 +43,8 @@
 - 글 작성 페이지의 클라이언트 임시 상태 로직 제거: Server Action 기반 실제 CRUD 흐름으로 전환
 - 삭제 확인 UX 보강: 상세 페이지 삭제 동작에 Dialog 확인 단계 적용
 - 디자인 토큰 불일치 보정: `:root`의 `--primary`, `--primary-foreground` 값 요청안으로 반영
+- 로그인/회원가입 페이지 추가: Server Action으로 Supabase Auth `signInWithPassword`/`signUp` 연동
+- 첨부 스케치 기반 홈 UI 반영: App Router 구조를 유지한 채 메인 배너/좌측 프로필/우측 썸네일 그리드 레이아웃으로 재구성
 
 ## 알게 된 점
 
@@ -43,3 +52,5 @@
 - App Router 환경에서는 폼 처리에 Server Action(`"use server"`)을 쓰면 Client 상태 코드 없이도 CRUD 구현 가능
 - `get_errors`의 `@theme`, `@apply` 경고는 Tailwind 전용 문법을 일반 CSS 검사기가 인식하지 못해 나타날 수 있음
 - 문서(ARCHITECTURE)와 실제 코드(컴포넌트/데이터 흐름)를 함께 갱신해야 다음 작업(인증/DB 마이그레이션)이 빨라짐
+- Next.js 16에서는 `cookies()`가 비동기 API이므로 Supabase 서버 클라이언트 초기화 시 `await cookies()`가 필요함
+- 스케치 형태의 화면 재현은 고정 크기 블록(배너/카드)과 반응형 그리드 조합으로 먼저 구조를 맞춘 뒤, 색/이미지는 추후 단계적으로 치환하는 방식이 안정적임

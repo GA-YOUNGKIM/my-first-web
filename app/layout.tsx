@@ -18,23 +18,33 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={cn("font-sans", geist.variable)}>
-      <body className="antialiased font-sans text-gray-900 bg-gray-50/50">
-        <nav className="sticky top-0 z-50 bg-gray-800/90 backdrop-blur-md text-white px-6 py-4 shadow-lg">
-          <div className="max-w-4xl mx-auto flex justify-between items-center">
-            <Link href="/" className="font-bold text-xl tracking-tight hover:text-blue-400过渡 transition-colors">
+      <body className="antialiased bg-background text-foreground">
+        <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <div className="mx-auto flex max-w-4xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <Link href="/" className="text-lg font-semibold tracking-tight text-foreground transition-colors hover:text-primary">
               내 블로그
             </Link>
-            <div className="flex gap-6">
-              <Link href="/" className="text-sm font-medium hover:text-blue-400 transition-colors">홈</Link>
-              <Link href="/posts" className="text-sm font-medium hover:text-blue-400 transition-colors">게시글 목록</Link>
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              <Link href="/" className="rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                홈
+              </Link>
+              <Link href="/posts" className="rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                게시글 목록
+              </Link>
+              <Link href="/login" className="rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                로그인
+              </Link>
+              <Link href="/signup" className="rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                회원가입
+              </Link>
             </div>
           </div>
         </nav>
-        <main className="max-w-4xl mx-auto p-6 min-h-[calc(100vh-160px)]">
+        <main className="mx-auto min-h-[calc(100vh-160px)] max-w-4xl px-4 py-6 sm:px-6">
           {children}
         </main>
-        <footer className="bg-white border-t border-gray-100 mt-12">
-          <div className="max-w-4xl mx-auto py-10 px-6 text-center text-gray-400 text-sm">
+        <footer className="mt-12 border-t border-border bg-background">
+          <div className="mx-auto max-w-4xl px-4 py-10 text-center text-sm text-muted-foreground sm:px-6">
             © 2026 내 블로그. All rights reserved.
           </div>
         </footer>

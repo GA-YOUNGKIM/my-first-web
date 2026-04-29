@@ -13,49 +13,62 @@ export default async function PostsPage() {
   const posts = await getPosts();
 
   return (
-    <div className="py-8 px-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10">
-        <div>
-          <h1 className="text-3xl font-extrabold text-foreground tracking-tight">전체 게시글</h1>
-          <p className="text-muted-foreground mt-2">다양한 주제의 이야기를 만나보세요.</p>
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-2">
+          <p className="text-sm font-medium tracking-[0.2em] text-muted-foreground uppercase">
+            posts
+          </p>
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+            전체 게시글
+          </h1>
+          <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
+            다양한 주제의 이야기를 만나보세요.
+          </p>
         </div>
-        <Button asChild size="lg" className="font-bold whitespace-nowrap">
+
+        <Button asChild size="lg" className="whitespace-nowrap font-medium">
           <Link href="/posts/new">
             <span className="text-xl">+</span> 새 글 쓰기
           </Link>
         </Button>
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-2">
         {posts.map((post) => (
           <Card
             key={post.id}
-            className="group rounded-2xl border bg-card py-0 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+            className="group h-full overflow-hidden rounded-2xl border border-border bg-card py-0 shadow-sm transition-transform duration-300 hover:-translate-y-0.5"
           >
-            <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="px-2 py-0.5 text-xs font-semibold text-primary bg-muted rounded-full">Blog</span>
-                <time className="text-xs text-muted-foreground" dateTime={post.date}>{post.date}</time>
+            <CardHeader className="space-y-2 px-5 pt-5 sm:px-6 sm:pt-6">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="rounded-full bg-muted px-2.5 py-1 font-semibold text-muted-foreground">
+                  Blog
+                </span>
+                <time className="text-muted-foreground" dateTime={post.date}>
+                  {post.date}
+                </time>
               </div>
-              <CardTitle className="text-lg sm:text-xl font-bold text-foreground transition-colors group-hover:text-primary">
+
+              <CardTitle className="line-clamp-2 text-lg font-semibold leading-7 text-foreground transition-colors group-hover:text-primary sm:text-xl">
                 <Link href={`/posts/${post.id}`}>{post.title}</Link>
               </CardTitle>
             </CardHeader>
 
-            <CardContent className="px-4 sm:px-6">
-              <p className="text-muted-foreground text-sm leading-relaxed line-clamp-3 mb-4 flex-grow">
+            <CardContent className="px-5 sm:px-6">
+              <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">
                 {post.content}
               </p>
             </CardContent>
 
-            <CardFooter className="px-4 sm:px-6 py-4 sm:py-6 bg-transparent border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <CardFooter className="flex flex-col gap-3 border-t border-border/70 bg-transparent px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-foreground text-xs font-semibold">
                   {post.author[0]}
                 </div>
                 <span className="text-sm font-medium text-foreground">{post.author}</span>
               </div>
-              <Button asChild size="sm" variant="ghost" className="font-medium">
+              <Button asChild size="default" variant="ghost" className="h-10 px-3 font-medium text-foreground hover:bg-background">
                 <Link href={`/posts/${post.id}`}>글 읽기 →</Link>
               </Button>
             </CardFooter>
