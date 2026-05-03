@@ -12,16 +12,19 @@
 - `ARCHITECTURE.md`
 - `.github/copilot-instructions.md`
 - `README.md`
+- `app/layout.tsx`
 - `app/globals.css`
+- `app/mypage/page.tsx`
+- `app/posts/[id]/actions.ts`
 - `app/posts/page.tsx`
 - `app/posts/[id]/page.tsx`
-- `app/posts/[id]/actions.ts`
 - `app/posts/[id]/edit/page.tsx`
 - `app/posts/new/page.tsx`
 - `components/sketch-home.tsx`
 - `components/comment-section.tsx`
 - `components/ui/textarea.tsx`
-- `app/mypage/page.tsx`
+- `data/comments.json`
+- `data/posts.json`
 - `lib/comments.ts`
 - `docs/wireframes.md`
 
@@ -55,6 +58,8 @@
 - 문서(`ARCHITECTURE.md`)와 실제 코드(컴포넌트/데이터 흐름)를 함께 갱신해야 다음 작업(인증/DB 마이그레이션)이 빨라짐
 - Next.js 16에서는 `cookies()`가 비동기 API이므로 Supabase 서버 클라이언트 초기화 시 `await cookies()`가 필요함
 - 스케치 형태의 화면 재현은 고정 크기 블록(배너/카드)과 반응형 그리드 조합으로 먼저 구조를 맞춘 뒤, 색/이미지는 추후 단계적으로 치환하는 방식이 안정적임
+- 파일 기반 상태에서 먼저 흐름을 검증하고, 이후 Supabase로 옮길 때는 저장소 레이어만 교체하는 방식이 가장 안전함
+- 댓글은 별도 데이터 파일과 상세 페이지 섹션을 묶어두면 검증이 빠르다
 
 ## 검증 결과
 

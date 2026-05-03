@@ -24,6 +24,7 @@ Ch1~6에서 만든 개인 블로그 프로젝트입니다.
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) - 프로젝트 설계 방향
 - [PAGE_MAP.md](PAGE_MAP.md) - 페이지 맵과 유저 플로우
+- [SUPABASE_SETUP.md](SUPABASE_SETUP.md) - Supabase 연결 및 환경변수 설정
 - [copilot-instructions.md](.github/copilot-instructions.md) - Copilot 작성 규칙
 
 ## 기술 스택
