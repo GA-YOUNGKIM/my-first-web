@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# my-first-web
 
-## Getting Started
+Ch1~6에서 만든 개인 블로그 프로젝트입니다.  
+독자는 글을 읽고, 작성자는 로그인 후 글을 작성하고 관리할 수 있도록 만드는 것을 목표로 합니다.
 
-First, run the development server:
+## 프로젝트 목표
+
+- 방문자는 글을 쉽게 찾고 편하게 읽는다.
+- 작성자는 로그인 후 글을 작성, 수정, 삭제할 수 있다.
+- 나중에 댓글, 검색, 마이페이지 같은 기능을 자연스럽게 추가할 수 있다.
+
+## 주요 페이지
+
+- `/` - 홈
+- `/posts` - 글 목록
+- `/posts/[id]` - 글 상세
+- `/posts/new` - 글 작성
+- `/posts/[id]/edit` - 글 수정
+- `/login` - 로그인
+- `/signup` - 회원가입
+- `/mypage` - 마이페이지
+
+## 문서
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) - 프로젝트 설계 방향
+- [PAGE_MAP.md](PAGE_MAP.md) - 페이지 맵과 유저 플로우
+- [copilot-instructions.md](.github/copilot-instructions.md) - Copilot 작성 규칙
+
+## 기술 스택
+
+- Next.js 16.2.1 (App Router only)
+- React 19.2.4
+- TypeScript 5.x
+- Tailwind CSS 4.x
+- shadcn/ui
+
+## 실행
+
+개발 서버 실행:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+브라우저에서 다음 주소를 엽니다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```text
+http://localhost:3000
+```

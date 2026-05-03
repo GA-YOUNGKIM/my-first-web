@@ -2,9 +2,11 @@
 
 ## 1단계: 기본 구조 (Ch7~8)
 
-- [x] ARCHITECTURE.md 작성
-- [x] copilot-instructions.md 작성
-- [x] shadcn/ui 초기화 + 테마 설정
+- [x] `ARCHITECTURE.md` 작성 및 보강
+- [x] `copilot-instructions.md` 작성 및 보강
+- [x] `README.md` 정리
+- [x] `docs/wireframes.md` 작성
+- [x] `shadcn/ui` 초기화 + 테마 설정
 - [x] 헤더/푸터 레이아웃
 - [x] 홈 페이지 (스케치 기반 레이아웃 반영)
 - [ ] Supabase 프로젝트 생성
@@ -22,4 +24,4 @@
 - [ ] 마이페이지
 - [ ] 댓글 기능
 
-## 진행률: 10/12 (83%)
+## 진행률: 12/14 (86%)

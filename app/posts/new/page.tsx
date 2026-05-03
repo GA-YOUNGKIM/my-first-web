@@ -3,6 +3,7 @@ import { createPostAction } from '@/app/posts/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function NewPostPage() {
   return (
@@ -42,13 +43,13 @@ export default function NewPostPage() {
               <label htmlFor="content" className="block text-sm font-medium text-foreground">
                 내용
               </label>
-              <textarea
+              <Textarea
                 id="content"
                 name="content"
                 placeholder="여기에 내용을 작성하세요..."
                 required
                 rows={10}
-                className="min-h-64 w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                className="min-h-64 rounded-xl border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground"
               />
             </div>
 

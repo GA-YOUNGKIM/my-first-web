@@ -4,6 +4,7 @@ import { getPostById } from "@/lib/post-repository";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export default async function EditPostPage({
   params,
@@ -62,14 +63,14 @@ export default async function EditPostPage({
               <label htmlFor="content" className="block text-sm font-bold text-foreground mb-2 ml-1">
                 내용
               </label>
-              <textarea
+              <Textarea
                 id="content"
                 name="content"
                 defaultValue={post.content}
                 placeholder="여기에 내용을 작성하세요..."
                 required
                 rows={10}
-                className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-primary/50 transition-all outline-none resize-none"
+                className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-foreground placeholder-muted-foreground"
               />
             </div>
 
