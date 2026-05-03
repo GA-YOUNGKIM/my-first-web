@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { deletePostAction } from "@/app/posts/actions";
+import { CommentSection } from "@/components/comment-section";
+import { getCommentsByPostId } from "@/lib/comments";
 import { getPostById } from "@/lib/post-repository";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,6 +24,7 @@ export default async function PostDetailPage({
   const { id } = await params;
   const postId = Number(id);
   const post = await getPostById(postId);
+  const comments = await getCommentsByPostId(postId);
 
   if (!post) {
     return (
@@ -132,6 +135,8 @@ export default async function PostDetailPage({
           </Button>
         </CardContent>
       </Card>
+
+      <CommentSection postId={postId} comments={comments} />
     </div>
   );
 }

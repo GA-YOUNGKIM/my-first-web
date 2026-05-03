@@ -31,6 +31,9 @@ export default function RootLayout({
               <Link href="/posts" className="rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
                 게시글 목록
               </Link>
+              <Link href="/mypage" className="rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                마이페이지
+              </Link>
               <Link href="/login" className="rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
                 로그인
               </Link>

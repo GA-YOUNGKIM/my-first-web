@@ -3,9 +3,9 @@
 ## 현재 상태
 
 - 마지막 작업일: 2026-05-03
-- 완료된 작업: 홈/목록/상세/작성/수정 페이지 정리, shadcn/ui 컴포넌트 적용, `ARCHITECTURE.md`/`copilot-instructions.md`/`README.md` 보강, `docs/wireframes.md` 작성, `app/globals.css` 테마 조정
+- 완료된 작업: 홈/목록/상세/작성/수정 페이지 정리, 마이페이지, 댓글 기능, shadcn/ui 컴포넌트 적용, `ARCHITECTURE.md`/`copilot-instructions.md`/`README.md` 보강, `docs/wireframes.md` 작성, `app/globals.css` 테마 조정
 - 진행 중: Supabase 프로젝트 생성 및 환경변수 연결
-- 미착수: 마이페이지, 댓글 기능
+- 미착수: 외부 Supabase 프로젝트 생성
 
 ## 오늘 변경 파일
 
@@ -15,10 +15,14 @@
 - `app/globals.css`
 - `app/posts/page.tsx`
 - `app/posts/[id]/page.tsx`
+- `app/posts/[id]/actions.ts`
 - `app/posts/[id]/edit/page.tsx`
 - `app/posts/new/page.tsx`
 - `components/sketch-home.tsx`
+- `components/comment-section.tsx`
 - `components/ui/textarea.tsx`
+- `app/mypage/page.tsx`
+- `lib/comments.ts`
 - `docs/wireframes.md`
 
 ## 기술 결정 사항
@@ -40,6 +44,8 @@
 - 디자인 토큰 보정: `:root`의 `--primary`, `--primary-foreground` 값을 요청값으로 반영
 - 로그인/회원가입 페이지 추가: Server Action으로 Supabase Auth `signInWithPassword`/`signUp` 연동
 - 홈 UI 재구성: 소개 + 검색 + 최근 글 카드 구조로 정리
+- 마이페이지 추가: 작성자 프로필과 내가 쓴 글 목록을 보여주는 개인 관리 화면 구성
+- 댓글 기능 추가: 게시글 상세에 댓글 작성/조회/삭제 흐름 연결
 
 ## 알게 된 점
 
@@ -61,3 +67,7 @@
 	- 홈 페이지와 `/posts/new` 페이지를 브라우저에서 확인함
 	- 홈은 히어로, 검색, CTA, 최근 글 카드 구조가 와이어프레임과 맞음
 	- 작성 페이지는 제목/내용 입력과 저장 버튼 배치가 의도대로 노출됨
+
+## 남은 작업
+
+- Supabase 프로젝트 생성 및 실제 환경변수 연결
