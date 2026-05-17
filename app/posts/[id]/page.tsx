@@ -3,6 +3,7 @@ import { deletePostAction } from "@/app/posts/actions";
 import { CommentSection } from "@/components/comment-section";
 import { getCommentsByPostId } from "@/lib/comments";
 import { getPostById } from "@/lib/post-repository";
+import { getCurrentUser } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -25,6 +26,7 @@ export default async function PostDetailPage({
   const postId = Number(id);
   const post = await getPostById(postId);
   const comments = await getCommentsByPostId(postId);
+  const user = await getCurrentUser();
 
   if (!post) {
     return (
@@ -45,6 +47,8 @@ export default async function PostDetailPage({
       </div>
     );
   }
+
+  const isAuthor = user?.email === post.author;
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
@@ -87,37 +91,39 @@ export default async function PostDetailPage({
               {post.content}
             </div>
 
-            <div className="mt-10 flex flex-col gap-3 border-t border-border/70 pt-6 sm:flex-row sm:justify-end">
-              <Button asChild variant="outline" size="lg" className="h-11 px-6 font-medium">
-                <Link href={`/posts/${post.id}/edit`}>수정</Link>
-              </Button>
+            {isAuthor && (
+              <div className="mt-10 flex flex-col gap-3 border-t border-border/70 pt-6 sm:flex-row sm:justify-end">
+                <Button asChild variant="outline" size="lg" className="h-11 px-6 font-medium">
+                  <Link href={`/posts/${post.id}/edit`}>수정</Link>
+                </Button>
 
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="destructive" size="lg" className="h-11 px-6 font-medium">
-                    삭제
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>게시글을 삭제할까요?</DialogTitle>
-                    <DialogDescription>
-                      삭제한 게시글은 복구할 수 없습니다. 정말 삭제하시겠어요?
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter className="gap-2 sm:justify-end">
-                    <DialogClose asChild>
-                      <Button variant="outline">취소</Button>
-                    </DialogClose>
-                    <form action={deletePostAction.bind(null, post.id)}>
-                      <Button type="submit" variant="destructive">
-                        삭제하기
-                      </Button>
-                    </form>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="destructive" size="lg" className="h-11 px-6 font-medium">
+                      삭제
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>게시글을 삭제할까요?</DialogTitle>
+                      <DialogDescription>
+                        삭제한 게시글은 복구할 수 없습니다. 정말 삭제하시겠어요?
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2 sm:justify-end">
+                      <DialogClose asChild>
+                        <Button variant="outline">취소</Button>
+                      </DialogClose>
+                      <form action={deletePostAction.bind(null, post.id)}>
+                        <Button type="submit" variant="destructive">
+                          삭제하기
+                        </Button>
+                      </form>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

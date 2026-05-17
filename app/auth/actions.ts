@@ -59,3 +59,18 @@ export async function signUpAction(formData: FormData) {
 
   redirect(toQuery("/login", "message", "회원가입이 완료되었습니다. 이메일 인증 후 로그인해 주세요."));
 }
+
+export async function signOutAction() {
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      redirect(toQuery("/", "error", "로그아웃에 실패했습니다."));
+    }
+  } catch {
+    redirect(toQuery("/", "error", "Supabase 설정을 먼저 완료해 주세요."));
+  }
+
+  redirect("/");
+}

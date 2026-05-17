@@ -1,13 +1,20 @@
 import Link from "next/link";
 import { getPosts } from "@/lib/post-repository";
+import { getCurrentUser } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-const profileName = "김가영";
+import { redirect } from "next/navigation";
 
 export default async function MyPage() {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const profileEmail = user.email || "사용자";
   const posts = await getPosts();
-  const myPosts = posts.filter((post) => post.author === profileName);
+  const myPosts = posts.filter((post) => post.author === profileEmail);
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
@@ -31,12 +38,12 @@ export default async function MyPage() {
             </CardHeader>
             <CardContent className="space-y-4 pt-6">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-2xl font-semibold text-foreground">
-                {profileName[0]}
+                {profileEmail[0]?.toUpperCase() ?? "U"}
               </div>
               <div className="space-y-2">
-                <p className="text-lg font-semibold text-foreground">{profileName}</p>
+                <p className="text-lg font-semibold text-foreground">{profileEmail}</p>
                 <p className="text-sm leading-7 text-muted-foreground">
-                  개인 블로그 작성자 페이지입니다. 앞으로 Supabase 프로필과 연결하면 더 개인화할 수 있습니다.
+                  Supabase 인증 사용자입니다. 안전하게 블로그를 작성하고 관리할 수 있습니다.
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-3">

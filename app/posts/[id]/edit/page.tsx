@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { updatePostAction } from "@/app/posts/actions";
 import { getPostById } from "@/lib/post-repository";
+import { getCurrentUser } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { redirect } from "next/navigation";
 
 export default async function EditPostPage({
   params,
@@ -14,6 +16,7 @@ export default async function EditPostPage({
   const { id } = await params;
   const postId = Number(id);
   const post = await getPostById(postId);
+  const user = await getCurrentUser();
 
   if (!post) {
     return (
@@ -21,6 +24,17 @@ export default async function EditPostPage({
         <h1 className="text-3xl font-bold text-foreground mb-4">수정할 게시글이 없습니다</h1>
         <Button asChild>
           <Link href="/posts">← 목록으로 돌아가기</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  if (user?.email !== post.author) {
+    return (
+      <div className="py-24 text-center">
+        <h1 className="text-3xl font-bold text-foreground mb-4">이 게시글을 수정할 권한이 없습니다</h1>
+        <Button asChild>
+          <Link href={`/posts/${post.id}`}>← 상세로 돌아가기</Link>
         </Button>
       </div>
     );

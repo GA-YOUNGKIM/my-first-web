@@ -188,3 +188,17 @@ posts.user_id -> profiles.id
 
 이 문서는 현재 구현 방향을 설명하는 초안입니다.
 나중에 페이지가 추가되면 페이지 맵과 유저 플로우를 이어서 보강하면 됩니다.
+
+## Supabase / Version Policy (Ch9 기준)
+
+- **교재 기준 패키지 버전**: Next.js `16.2.1`, `@supabase/supabase-js` `2.47.12`, `@supabase/ssr` `0.5.2`.
+- **현재 설치(로컬 `package.json`)**: `@supabase/supabase-js` `^2.105.4`, `@supabase/ssr` `^0.10.3`.
+- 문서와 예제 코드는 **교재 기준** 버전으로 통일합니다. 로컬 빌드/테스트에서 버전 차이로 문제가 발생하면 `package.json` 기준으로 원인 진단을 수행합니다.
+- Supabase 대시보드 메뉴 안내만 2026년 5월 기준 UI를 따릅니다.
+
+- 환경변수(Ch8 유지): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- 인증은 이메일/비밀번호만 사용하며, 로그인은 `signInWithPassword` 사용합니다. 구버전 `auth.signIn()` 호출은 사용하지 않습니다.
+- 클라이언트에 `service_role` 키를 두지 않습니다(서버 전용 키는 비공개로 유지).
+- 보호 라우트는 App Router 환경에서 `middleware.ts`로 구현합니다.
+
+참고: 위 교재 기준과 로컬 설치 버전이 다를 수 있으므로, 코드 수정 시에는 두 기준을 함께 표기하거나 빌드 검증을 먼저 진행하세요.

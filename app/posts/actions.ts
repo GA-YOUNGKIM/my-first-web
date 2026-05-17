@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createPost, deletePost, updatePost } from "@/lib/post-repository";
+import { getCurrentUser } from "@/lib/supabase/server";
 
 function readString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -17,10 +18,16 @@ export async function createPostAction(formData: FormData) {
     throw new Error("제목과 내용을 입력해 주세요.");
   }
 
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
   const post = await createPost({
     title,
     content,
-    author: "김가영",
+    author: user.email || "익명",
   });
 
   revalidatePath("/posts");

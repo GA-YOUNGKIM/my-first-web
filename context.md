@@ -38,6 +38,15 @@
 - 인증 방향: Supabase Auth (이메일/비밀번호)
 - Supabase 서버 클라이언트: `@supabase/ssr` + 비동기 `cookies()` 패턴 사용
 
+### Supabase / 버전 및 환경변수 (Ch9 기준)
+
+- 교재 기준 패키지: `@supabase/supabase-js` `2.47.12`, `@supabase/ssr` `0.5.2`.
+- 현재 설치 기준(`package.json`): `@supabase/supabase-js` `^2.105.4`, `@supabase/ssr` `^0.10.3`.
+- 문서와 예제는 교재 기준을 따릅니다. 빌드 오류는 `package.json` 기준으로 원인 확인합니다.
+- 환경변수 이름(Ch8 유지): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- 인증은 이메일/비밀번호만 사용하며, 로그인은 `signInWithPassword`를 사용합니다. `service_role` 키는 클라이언트에 두지 않습니다.
+- Supabase 대시보드 메뉴 안내는 2026년 5월 기준 UI를 따릅니다.
+
 ## 해결된 이슈
 
 - 기존 하드코딩 스타일과 shadcn/ui 스타일 혼재 문제 해결: 주요 페이지를 Card/Button/Input/Dialog 중심으로 통일
