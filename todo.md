@@ -14,13 +14,21 @@
 
 	Ch9 Supabase 체크리스트:
 
-	- [ ] Supabase CLI 연결 확인 (`npx supabase --version`, `npx supabase projects list`)
-	- [ ] Supabase 대시보드에서 Auth(이메일/비밀번호) 설정 확인
-	- [ ] `.env.local`에 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` 설정
-	- [ ] 로그인 구현이 `signInWithPassword`를 사용하는지 검증 (`supabase.auth.signInWithPassword`)
-	- [ ] 코드베이스에 구버전 `auth.signIn()` 호출이 남아있지 않은지 검사
-	- [ ] `service_role` 또는 서버 전용 키가 클라이언트 코드에 노출되지 않았는지 검사
-	- [ ] 미들웨어 보호 라우트(`middleware.ts`) 구현 여부 확인
+	- [x] Supabase CLI 연결 확인 (`npx supabase --version`, `npx supabase projects list`)
+	- [x] Supabase 대시보드에서 Auth(이메일/비밀번호) 설정 확인
+	- [x] `.env.local`에 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` 설정
+	- [x] 회원가입 구현 (`lib/auth.ts` + `app/signup/page.tsx`)
+	- [x] 로그인 구현 (`lib/auth.ts` + `app/login/page.tsx`)
+	- [x] 로그아웃 구현 (`lib/auth.ts` + `components/site-header.tsx`)
+	- [x] 로그인 구현이 `signInWithPassword`를 사용하는지 검증
+	- [x] 코드베이스에 구버전 `auth.signIn()` 호출이 남아있지 않은지 검사 (없음)
+	- [x] `service_role` 또는 서버 전용 키가 클라이언트 코드에 노출되지 않았는지 검사 (없음)
+	- [x] AuthProvider/useAuth Hook 구현 (`contexts/AuthContext.tsx`)
+	- [x] Header 로그인 상태 분기 (`components/site-header.tsx`)
+	- [x] `/posts/new` 보호 라우트 구현 (`middleware.ts`)
+	- [x] npm run build 검증 (성공)
+	- [x] git grep 검증: 구버전 API 없음, 민감한 키 없음
+	- [x] Vercel 배포 URL 검증 (배포 이력 17개)
 
 	Version Policy:
 
@@ -42,4 +50,14 @@
 - [x] 마이페이지
 - [x] 댓글 기능
 
-## 진행률: 14/15 (93%)
+## 진행률: 15/15 (100%)
+
+## Ch9 완료 요약
+
+✅ 인증 체계 구현 완료
+- Supabase Auth 이메일/비밀번호 인증 완료
+- AuthProvider/useAuth로 전역 상태 관리
+- 새로고침 후 세션 유지 구현
+- 보호 라우트 미들웨어 적용
+- 환경변수 Vercel 배포 설정
+- npm build 및 배포 검증 완료

@@ -54,16 +54,25 @@
 3. 관심 있는 글 카드를 눌러 `/posts/[id]`로 들어갑니다.
 4. 본문을 읽고 목록이나 다른 글로 이동합니다.
 
-### 4-2. 글 작성 플로우
+### 4-2. 인증 플로우 (Ch9)
 
-1. 로그인이 되어 있지 않으면 `새 글 쓰기`를 눌렀을 때 `/login`으로 이동합니다.
-2. 로그인한 사용자는 `/posts/new`에서 글을 작성합니다.
+1. 사용자가 `/signup`에서 이름, 이메일, 비밀번호를 입력해 회원가입합니다.
+2. 가입 성공 후 `/login`으로 이동해 로그인합니다.
+3. Supabase Auth가 세션을 저장하고 `AuthProvider`가 전역 상태를 업데이트합니다.
+4. 새로고침해도 `getUser()`와 `onAuthStateChange()` 구독으로 로그인 상태가 유지됩니다.
+5. Header는 `useAuth()`를 통해 로그인 상태를 읽고, 링크/버튼을 분기해 표시합니다.
+6. 로그아웃 버튼 클릭 시 `signOut()`을 호출하고, 상태가 업데이트되며 `/`로 이동합니다.
+
+### 4-3. 글 작성 플로우
+
+1. 로그인 상태가 아니면 `새 글 쓰기` 클릭 시 `middleware.ts`가 `/login`으로 리다이렉트합니다.
+2. 로그인한 사용자는 `/posts/new`에 접근할 수 있고, 제목과 본문을 입력합니다.
 3. 제목과 본문을 입력하고 저장합니다.
 4. 저장 후 `/posts/[새글ID]`로 이동해 결과를 확인합니다.
 
-### 4-3. 마이페이지 확인 플로우
+### 4-4. 마이페이지 확인 플로우
 
-1. 로그인한 사용자가 `/mypage`로 이동합니다.
+1. 로그인한 사용자가 `/mypage`로 이동합니다. (비로그인이면 `middleware.ts`가 `/login`으로 리다이렉트)
 2. 프로필 정보와 내가 쓴 글 목록을 확인합니다.
 3. 글을 선택해 `/posts/[id]`로 이동합니다.
 4. 필요하면 `/posts/[id]/edit`에서 글을 수정합니다.
@@ -183,6 +192,25 @@ posts.user_id -> profiles.id
 
 - 주요 컴포넌트: `Button`, `Card`, `CardContent`, `Dialog`
 - 데이터 흐름: 동적 라우트의 `id`로 글을 조회해 본문을 보여주고, 수정/삭제는 작성자 기준으로 처리한다. 삭제는 Dialog로 한 번 더 확인한다.
+
+## 8-2. 인증 상태 관리 (Ch9)
+
+### 전역 상태 구조
+
+- **AuthProvider** (`contexts/AuthContext.tsx`): Supabase 세션을 구독하고 전역 상태로 제공
+- **useAuth Hook**: 어디서나 `const { user, loading, signInWithEmail, signUpWithEmail, signOut } = useAuth()`로 접근
+
+### 초기화 흐름
+
+1. 앱 시작 시 `AuthProvider`의 `useEffect`에서 `getUser()`로 현재 세션 확인
+2. 세션이 있으면 `user` 상태 업데이트, 없으면 `null`로 설정
+3. `onAuthStateChange()` 구독으로 로그인/로그아웃 변화 감지
+4. cleanup에서 `subscription.unsubscribe()` 호출
+
+### 보호 라우트
+
+- **middleware.ts**: `/posts/new`, `/mypage`, `/mypage/:path*`, `/posts/:path*/edit` 경로를 보호
+- 비로그인 사용자가 접근하면 `/login`으로 리다이렉트
 
 ## 9. 참고
 
