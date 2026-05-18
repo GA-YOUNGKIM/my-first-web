@@ -1,16 +1,33 @@
 import Link from "next/link";
-import { getPosts } from "@/lib/post-repository";
+import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 
 export default async function PostsPage() {
-  const posts = await getPosts();
+  const supabase = await createClient();
+  const { data: posts, error } = await supabase
+    .from("posts")
+    .select("id, title, content, created_at, user_id")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return (
+      <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+        <Card className="border border-border bg-card shadow-sm">
+          <CardContent className="px-6 py-10 text-center text-sm text-muted-foreground">
+            오류가 발생했습니다.
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const postList = posts ?? [];
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
@@ -37,13 +54,13 @@ export default async function PostsPage() {
 
         <div className="px-5 py-5 sm:px-8 sm:py-6">
           <div className="mb-5 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-            <span>총 {posts.length}개의 글</span>
+            <span>총 {postList.length}개의 글</span>
             <span>최근 글이 위에 표시됩니다</span>
           </div>
 
-          {posts.length > 0 ? (
+          {postList.length > 0 ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-2">
-              {posts.map((post) => (
+              {postList.map((post) => (
                 <Card
                   key={post.id}
                   className="group h-full overflow-hidden rounded-2xl border border-border bg-background py-0 shadow-sm transition-colors hover:border-primary/30"
@@ -53,8 +70,11 @@ export default async function PostsPage() {
                       <span className="rounded-full bg-muted px-2.5 py-1 font-semibold text-muted-foreground">
                         Post
                       </span>
-                      <time className="text-muted-foreground" dateTime={post.date}>
-                        {post.date}
+                      <time
+                        className="text-muted-foreground"
+                        dateTime={post.created_at ?? ""}
+                      >
+                        {post.created_at ? new Date(post.created_at).toLocaleDateString("ko-KR") : ""}
                       </time>
                     </div>
 
@@ -69,16 +89,7 @@ export default async function PostsPage() {
                     </p>
                   </CardContent>
 
-                  <CardFooter className="flex flex-col gap-3 border-t border-border/70 bg-transparent px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-foreground">
-                        {post.author[0]}
-                      </div>
-                      <div className="leading-tight">
-                        <p className="text-sm font-medium text-foreground">{post.author}</p>
-                        <p className="text-xs text-muted-foreground">작성자</p>
-                      </div>
-                    </div>
+                  <div className="border-t border-border/70 px-5 py-5 sm:px-6">
                     <Button
                       asChild
                       size="default"
@@ -87,17 +98,14 @@ export default async function PostsPage() {
                     >
                       <Link href={`/posts/${post.id}`}>글 읽기 →</Link>
                     </Button>
-                  </CardFooter>
+                  </div>
                 </Card>
               ))}
             </div>
           ) : (
             <Card className="border-dashed border-border bg-background">
               <CardContent className="flex flex-col items-center justify-center gap-4 px-6 py-12 text-center">
-                <p className="text-base font-medium text-foreground">아직 글이 없어요</p>
-                <p className="max-w-md text-sm leading-7 text-muted-foreground">
-                  첫 글을 작성하면 이 공간에 카드 형태로 차곡차곡 쌓입니다.
-                </p>
+                <p className="text-sm text-muted-foreground">글이 없습니다.</p>
                 <Button asChild className="h-11 px-6 font-medium">
                   <Link href="/posts/new">첫 글 쓰기</Link>
                 </Button>

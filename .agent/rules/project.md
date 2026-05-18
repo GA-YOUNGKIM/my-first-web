@@ -30,6 +30,13 @@
   - 클라이언트에 `service_role` 키를 절대 두지 마십시오.
   - 보호 라우트는 App Router 환경에서 `middleware.ts`로 구현합니다.
 
+  - Ch10 게시글 CRUD 규칙 추가:
+    - 브라우저 클라이언트는 `lib/supabase/client.ts`를 사용해야 합니다.
+    - 인증 상태는 `AuthProvider`와 `useAuth()` 훅을 통해 읽어와야 합니다.
+    - Ch8 컬럼명은 변경하지 마십시오. `profiles`(`id`, `username`, `avatar_url`, `role`), `posts`(`id`, `user_id`, `title`, `content`, `created_at`).
+    - 수정/삭제 UI의 노출 여부는 클라이언트에서 제어하되, 실제 권한 검증은 Ch11 RLS로 처리합니다.
+    - 에이전트가 CRUD 관련 코드를 생성할 때는 Server Action 패턴(`"use server"`)을 우선 권장합니다.
+
 - 실행/디버깅 가이드:
   - 문서와 예제 코드는 교재 기준 버전을 따릅니다. 로컬에서 실행/빌드 중 버전 충돌로 문제가 발생하면 `package.json`에 명시된 버전을 먼저 확인하세요.
   - Supabase 대시보드 안내는 2026-05 기준 UI 경로를 참고합니다.

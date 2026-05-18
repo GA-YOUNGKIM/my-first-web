@@ -7,3 +7,10 @@ See `.agent/rules/project.md` for Ch9 Supabase-specific agent rules (version pol
 - Supabase Auth는 이메일/비밀번호만 사용하고, 로그인은 `signInWithPassword`를 사용합니다.
 - 보호 라우트는 `middleware.ts`를 사용하고, `next/router`와 `pages` router는 사용하지 않습니다.
 - `service_role` 키는 클라이언트에 두지 않습니다.
+
+추가(Ch10): 게시글 CRUD 구현 시 다음을 준수하세요:
+
+- `lib/supabase/client.ts` 사용(브라우저 클라이언트)
+- `AuthProvider`/`useAuth()`로 현재 유저 식별 후 `posts.user_id`와 매칭
+- Ch8 컬럼명은 변경하지 않음: `profiles`(`id`, `username`, `avatar_url`, `role`), `posts`(`id`, `user_id`, `title`, `content`, `created_at`)
+- 수정/삭제 UI는 UX 차원에서 구현하되, 권한 검증은 Ch11에서 RLS로 처리

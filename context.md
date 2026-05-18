@@ -2,12 +2,12 @@
 
 ## 현재 상태
 
-- 마지막 작업일: 2026-05-17
-- 완료된 작업: 홈/목록/상세/작성/수정 페이지, 마이페이지, 댓글 기능, shadcn/ui 적용, Supabase Auth 이메일/비밀번호 인증 구현, 로그인/회원가입 페이지, AuthProvider/useAuth Hook, Header 로그인 상태 분기, middleware.ts 보호 라우트, npm build 검증, Vercel 배포
+- 마지막 작업일: 2026-05-18
+- 완료된 작업: 홈/목록/상세/작성/수정 페이지, 마이페이지, 댓글 기능, shadcn/ui 적용, Supabase Auth 이메일/비밀번호 인증 구현, 로그인/회원가입 페이지, AuthProvider/useAuth Hook, Header 로그인 상태 분기, middleware.ts 보호 라우트, 게시글 CRUD(Supabase), npm build 검증, Vercel 배포
 - 진행 중: 없음
 - 미착수: Supabase 실시간 구독(Realtime), RLS 정책(Row-Level Security)
 
-## Ch9 완료 작업 파일 (인증)
+## Ch9~Ch10 완료 작업 파일
 
 - `lib/auth.ts` (이메일/비밀번호 인증 함수)
 - `lib/supabase/client.ts` (브라우저 클라이언트)
@@ -18,6 +18,15 @@
 - `app/layout.tsx` (AuthProvider 연결)
 - `components/site-header.tsx` (로그인 상태 분기 + 로그아웃)
 - `middleware.ts` (보호 라우트: /posts/new, /mypage, /mypage/:path*, /posts/:path*/edit)
+- `app/posts/page.tsx` (게시글 목록: Supabase select, created_at 내림차순)
+- `app/posts/[id]/page.tsx` (게시글 상세: Supabase select, 작성자 UI 분기)
+- `app/posts/new/page.tsx` (게시글 작성: Supabase insert)
+- `app/posts/[id]/edit/page.tsx` (게시글 수정: Supabase select + update)
+- `app/posts/actions.ts` (게시글 insert/update/delete 서버 액션)
+- `components/post-detail-actions.tsx` (상세 화면 수정/삭제 UI 분기와 delete)
+- `components/post-edit-form.tsx` (수정 폼 UI와 update)
+- `app/posts/loading.tsx` (목록 로딩)
+- `app/posts/[id]/loading.tsx` (상세 로딩)
 - `package.json` (Supabase 패키지 버전 확인)
 - `.env.local` (Supabase 환경변수)
 
@@ -36,6 +45,9 @@
 - 세션 유지: `onAuthStateChange()` 구독으로 새로고침 후에도 로그인 상태 유지
 - 보호 라우트: `middleware.ts`에서 비로그인 사용자를 `/login`으로 리다이렉트
 - Supabase 클라이언트: `@supabase/ssr`의 `createBrowserClient` (클라이언트), `createServerClient` (미들웨어)
+- CRUD 쿼리 패턴: 목록/상세는 `select`, 작성은 `insert`, 수정은 `update`, 삭제는 `delete`를 사용
+- 작성자 UI 분기: `user.id === post.user_id`일 때만 수정/삭제 UI를 노출
+- 실제 보안은 Ch11 RLS에서 처리하며, 현재 UI 분기는 화면 제어만 담당
 
 ### Supabase / 버전 및 환경변수 (Ch9 기준)
 
@@ -85,3 +97,25 @@
 ## 남은 작업
 
 - Supabase 프로젝트 생성 및 실제 환경변수 연결
+
+## Ch10 게시글 CRUD 준비 체크리스트
+
+- 목표: Ch8 스키마와 Ch9 인증을 바탕으로 게시글 CRUD를 App Router 환경에서 구현합니다.
+- 사용 리소스:
+	- 브라우저 Supabase 클라이언트: `lib/supabase/client.ts`
+	- 서버 Supabase 클라이언트: `lib/supabase/server.ts` 또는 `@supabase/ssr`의 `createServerClient`
+	- 인증 상태: `contexts/AuthContext.tsx` (`AuthProvider`, `useAuth()`)
+- 데이터 모델(Ch8 스키마): `posts`(`id`, `user_id`, `title`, `content`, `created_at`), `profiles`(`id`, `username`, `avatar_url`, `role`)
+- 구현 항목:
+	- 서버 액션 기반 `createPost`(작성), `updatePost`(수정), `deletePost`(삭제) 구현 완료 (`app/posts/actions.ts` 활용)
+	- 페이지: `/posts`(목록), `/posts/[id]`(상세), `/posts/new`(작성), `/posts/[id]/edit`(수정) 구현 완료
+	- UI: 작성/수정 폼은 클라이언트 컴포넌트로 연결하고, 입력 컴포넌트는 shadcn/ui 사용
+	- 권한: UI 레벨에서 작성자만 수정/삭제 버튼 노출. 실제 권한 검증은 Ch11 RLS에서 처리
+	- 마이페이지에서 현재 사용자의 글 목록 노출 (user_id 기준 필터)
+- 검증 포인트:
+	- `lib/supabase/client.ts`가 프로젝트에서 사용되는지 확인
+	- `useAuth()`로 현재 유저 ID를 안전하게 받아오는지 확인
+	- `posts` 컬럼명이 Ch8 스키마와 일치하는지 확인
+	- `profiles` 컬럼명이 Ch8 스키마와 일치하는지 확인 (`id`, `username`, `avatar_url`, `role`)
+	- `next/router`가 사용되지 않았는지 점검
+	- `service_role` 키가 클라이언트 코드에 노출되어 있지 않은지 점검

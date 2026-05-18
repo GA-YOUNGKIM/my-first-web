@@ -140,10 +140,10 @@
 
 | 컬럼 | 타입 | 제약 | 설명 |
 |---|---|---|---|
-| id | uuid | PRIMARY KEY, auth.users 참조 | 사용자 고유 식별자 |
+| id | uuid | PRIMARY KEY, auth.users(id) 참조 | 사용자 고유 식별자 |
 | username | text | NOT NULL | 화면에 표시할 이름 |
 | avatar_url | text | NULL | 프로필 이미지 주소 |
-| created_at | timestamptz | DEFAULT now() | 생성 시각 |
+| role | text | NOT NULL | 사용자 역할 |
 
 ### 7-2. posts 테이블
 
@@ -166,10 +166,12 @@ posts.user_id -> profiles.id
 - 각 게시글은 정확히 한 명의 작성자에 속합니다.
 - 마이페이지는 이 관계를 이용해 현재 로그인한 사용자의 글만 보여줍니다.
 
+- 위 컬럼명은 임의로 바꾸지 않습니다.
+
 ### 7-4. Copilot 검토 메모
 
 - Copilot에게 요청한 결과도 `profiles` + `posts` 1:N 구조가 블로그에 가장 자연스럽다는 방향으로 정리되었습니다.
-- `profiles`는 Supabase `auth.users`를 참조하고, `posts.user_id`가 작성자를 연결하는 방식이 핵심입니다.
+- `profiles`는 Supabase `auth.users(id)`를 참조하고, `posts.user_id`가 작성자를 연결하는 방식이 핵심입니다.
 
 ## 8. 페이지별 주요 컴포넌트와 데이터 흐름
 
@@ -180,18 +182,34 @@ posts.user_id -> profiles.id
 
 ### 8-2. 포스트 목록 (/posts)
 
-- 주요 컴포넌트: `Button`, `Card`, `CardHeader`, `CardContent`, `CardFooter`, `CardTitle`
-- 데이터 흐름: 서버에서 글 목록을 가져와 카드 목록으로 보여주고, 각 카드 클릭 시 `/posts/[id]`로 이동한다.
+- 주요 컴포넌트: `Button`, `Card`, `CardContent`, `CardHeader`, `CardTitle`
+- 데이터 흐름: 서버에서 Supabase `posts`를 `select`로 가져와 `created_at` 내림차순으로 카드 목록을 보여주고, 각 카드 클릭 시 `/posts/[id]`로 이동한다.
+- 상태: 로딩은 `app/posts/loading.tsx`, 빈 목록은 최소 문구와 작성 버튼으로 처리한다.
 
 ### 8-3. 포스트 작성 (/posts/new)
 
 - 주요 컴포넌트: `Button`, `Card`, `CardContent`, `CardHeader`, `CardTitle`, `Input`, `Textarea`
-- 데이터 흐름: 제목과 본문을 입력한 뒤 서버 액션으로 저장하고, 저장 후 새 글 상세 페이지로 이동한다.
+- 데이터 흐름: 제목과 본문을 입력한 뒤 Supabase `insert`로 저장하고, 저장 후 새 글 상세 페이지로 이동한다.
+- 상태: 로그인하지 않았으면 안내 후 `/login`으로 이동하고, 로딩과 실패 문구를 최소로 표시한다.
 
 ### 8-4. 포스트 상세 (/posts/[id])
 
 - 주요 컴포넌트: `Button`, `Card`, `CardContent`, `Dialog`
-- 데이터 흐름: 동적 라우트의 `id`로 글을 조회해 본문을 보여주고, 수정/삭제는 작성자 기준으로 처리한다. 삭제는 Dialog로 한 번 더 확인한다.
+- 데이터 흐름: 동적 라우트의 `id`로 Supabase `select`를 수행해 본문을 보여주고, 수정/삭제는 작성자 기준으로 UI만 분기한다. 삭제는 Dialog로 한 번 더 확인한다.
+- 상태: 없는 글은 `notFound()`로 처리하고, 로딩은 `app/posts/[id]/loading.tsx`가 담당한다.
+
+### 8-5. 포스트 수정 (/posts/[id]/edit)
+
+- 주요 컴포넌트: `Button`, `Card`, `CardContent`, `CardHeader`, `CardTitle`, `Input`, `Textarea`
+- 데이터 흐름: 기존 글을 `select`로 불러와 제목과 본문을 수정하고, Supabase `update`의 대상은 `posts.id`다.
+- 상태: 작성자만 폼을 볼 수 있고, 로그인하지 않았으면 `/login`으로 이동한다.
+
+### 8-6. 포스트 CRUD 컴포넌트 구조
+
+- `components/post-detail-actions.tsx`: 상세 화면의 수정/삭제 버튼과 삭제 확인 다이얼로그를 담당한다.
+- `components/post-edit-form.tsx`: 수정 화면의 제목/내용 폼과 update 제출을 담당한다.
+- `app/posts/actions.ts`: 작성, 수정, 삭제 서버 액션을 모아둔다.
+- `app/posts/loading.tsx`, `app/posts/[id]/loading.tsx`: 목록과 상세의 최소 로딩 상태를 담당한다.
 
 ## 8-2. 인증 상태 관리 (Ch9)
 
@@ -212,6 +230,11 @@ posts.user_id -> profiles.id
 - **middleware.ts**: `/posts/new`, `/mypage`, `/mypage/:path*`, `/posts/:path*/edit` 경로를 보호
 - 비로그인 사용자가 접근하면 `/login`으로 리다이렉트
 
+### 공개 경로와 보호 경로
+
+- 공개 경로: `/`, `/posts`, `/posts/[id]`, `/login`, `/signup`
+- 보호 경로: `/posts/new`, `/posts/[id]/edit`, `/mypage`, `/mypage/:path*`
+
 ## 9. 참고
 
 이 문서는 현재 구현 방향을 설명하는 초안입니다.
@@ -228,5 +251,20 @@ posts.user_id -> profiles.id
 - 인증은 이메일/비밀번호만 사용하며, 로그인은 `signInWithPassword` 사용합니다. 구버전 `auth.signIn()` 호출은 사용하지 않습니다.
 - 클라이언트에 `service_role` 키를 두지 않습니다(서버 전용 키는 비공개로 유지).
 - 보호 라우트는 App Router 환경에서 `middleware.ts`로 구현합니다.
+
+## Ch10 — 게시글 CRUD 구현 지침
+
+- 목표: Ch8 스키마와 Ch9 인증을 활용해 App Router 환경에서 게시글 CRUD를 완성합니다.
+- 사용 모듈/파일:
+  - 브라우저 클라이언트: `lib/supabase/client.ts`
+  - 서버 클라이언트 / middleware: `lib/supabase/server.ts`, `@supabase/ssr`의 `createServerClient`
+  - 인증: `contexts/AuthContext.tsx` (`AuthProvider`, `useAuth()`)
+  - Server Actions: `app/posts/actions.ts`에 CRUD 서버 액션 구현
+- 데이터 일관성: `posts` 테이블 컬럼은 Ch8 스키마(`id`, `user_id`, `title`, `content`, `created_at`)를 준수합니다.
+- UI/보안 분리 원칙: 수정/삭제는 UI(버튼/다이얼로그)로 제공하되, 실제 권한 검증은 Ch11에서 RLS를 통해 DB 레벨에서 강제합니다.
+- 테스트/검증:
+  - `useAuth()`로 current user id를 얻어 `user_id`를 비교하는 로직을 유닛/통합 테스트로 검증
+  - `next/router` 사용 금지 규칙을 코드베이스 전체에서 점검
+  - `service_role` 키의 클라이언트 노출이 없는지 확인
 
 참고: 위 교재 기준과 로컬 설치 버전이 다를 수 있으므로, 코드 수정 시에는 두 기준을 함께 표기하거나 빌드 검증을 먼저 진행하세요.

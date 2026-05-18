@@ -14,4 +14,10 @@ Agents working on this repository must follow the rules in `.agent/rules/project
 - 보호 라우트는 `middleware.ts`를 사용하고, `next/router`와 `pages` router는 사용하지 않습니다.
 - `service_role` 키는 클라이언트에 두지 않습니다.
 
+- Ch10(게시글 CRUD) 지침:
+	- 브라우저에서 Supabase 연동은 `lib/supabase/client.ts`를 사용합니다.
+	- 인증 상태는 `AuthProvider`/`useAuth()`를 통해 가져와 `posts.user_id`와 비교합니다.
+	- Ch8 컬럼명은 변경하지 않습니다. `profiles`(`id`, `username`, `avatar_url`, `role`), `posts`(`id`, `user_id`, `title`, `content`, `created_at`).
+	- 수정/삭제 UI는 구현하되, 권한 검증은 Ch11 RLS로 처리함을 문서에 명시합니다.
+
 When creating or modifying auth-related code, prefer the Ch9 교재 기준 and record any differences with the local `package.json` versions in PR descriptions.

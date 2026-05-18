@@ -1,12 +1,9 @@
 import Link from "next/link";
-import { updatePostAction } from "@/app/posts/actions";
-import { getPostById } from "@/lib/post-repository";
-import { getCurrentUser } from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { redirect } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
+import { PostEditForm } from "@/components/post-edit-form";
 
 export default async function EditPostPage({
   params,
@@ -15,33 +12,19 @@ export default async function EditPostPage({
 }) {
   const { id } = await params;
   const postId = Number(id);
-  const post = await getPostById(postId);
-  const user = await getCurrentUser();
+  const supabase = await createClient();
+  const { data: post, error } = await supabase
+    .from("posts")
+    .select("id, title, content, user_id")
+    .eq("id", postId)
+    .maybeSingle();
 
-  if (!post) {
-    return (
-      <div className="py-24 text-center">
-        <h1 className="text-3xl font-bold text-foreground mb-4">수정할 게시글이 없습니다</h1>
-        <Button asChild>
-          <Link href="/posts">← 목록으로 돌아가기</Link>
-        </Button>
-      </div>
-    );
-  }
-
-  if (user?.email !== post.author) {
-    return (
-      <div className="py-24 text-center">
-        <h1 className="text-3xl font-bold text-foreground mb-4">이 게시글을 수정할 권한이 없습니다</h1>
-        <Button asChild>
-          <Link href={`/posts/${post.id}`}>← 상세로 돌아가기</Link>
-        </Button>
-      </div>
-    );
+  if (error || !post) {
+    notFound();
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-12 px-4">
+    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
       <div className="mb-8">
         <Button asChild variant="ghost" className="text-sm font-medium text-muted-foreground hover:text-primary">
           <Link href={`/posts/${post.id}`}>← 상세로 돌아가기</Link>
@@ -49,60 +32,12 @@ export default async function EditPostPage({
         <h1 className="text-3xl font-bold text-foreground mt-6 tracking-tight">게시글 수정</h1>
       </div>
 
-      <Card className="border border-border bg-card shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xl text-foreground">수정 폼</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form
-            action={updatePostAction.bind(null, post.id)}
-            className="space-y-8"
-          >
-            <div>
-              <label htmlFor="title" className="block text-sm font-bold text-foreground mb-2 ml-1">
-                제목
-              </label>
-              <Input
-                type="text"
-                id="title"
-                name="title"
-                defaultValue={post.title}
-                placeholder="제목을 입력하세요"
-                required
-                className="h-10 rounded-lg px-3"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="content" className="block text-sm font-bold text-foreground mb-2 ml-1">
-                내용
-              </label>
-              <Textarea
-                id="content"
-                name="content"
-                defaultValue={post.content}
-                placeholder="여기에 내용을 작성하세요..."
-                required
-                rows={10}
-                className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-foreground placeholder-muted-foreground"
-              />
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <Button
-                type="submit"
-                size="lg"
-                className="flex-1 font-bold"
-              >
-                수정사항 저장
-              </Button>
-              <Button asChild variant="outline" size="lg" className="flex-1 sm:flex-none sm:px-8 font-bold">
-                <Link href={`/posts/${post.id}`}>취소</Link>
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      <PostEditForm
+        postId={post.id}
+        postUserId={post.user_id}
+        initialTitle={post.title}
+        initialContent={post.content}
+      />
     </div>
   );
 }
