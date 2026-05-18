@@ -1,0 +1,17 @@
+
+> my-first-web@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.1 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://172.20.10.2:3000
+- Environments: .env.local
+✓ Ready in 253ms
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+ GET /login?from=%2Fposts%2Fnew 200 in 312ms (next.js: 111ms, application-code: 201ms)
+ GET /signup 200 in 32ms (next.js: 16ms, application-code: 16ms)
+ GET /signup 200 in 15ms (next.js: 2ms, application-code: 13ms)
+ GET /login 200 in 45ms (next.js: 3ms, application-code: 42ms)
+ GET /posts 200 in 904ms (next.js: 49ms, application-code: 855ms)
+ GET /posts/new 200 in 1127ms (next.js: 18ms, proxy.ts: 1075ms, application-code: 34ms)

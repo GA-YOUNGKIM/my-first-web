@@ -45,7 +45,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initializeUser();
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       if (!isMounted) {
         return;
       }
@@ -55,7 +57,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       isMounted = false;
-      subscription.unsubscribe();
+      if (subscription && typeof subscription.unsubscribe === "function") {
+        subscription.unsubscribe();
+      }
     };
   }, []);
 

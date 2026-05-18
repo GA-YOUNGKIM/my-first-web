@@ -13,19 +13,18 @@ export default async function PostDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const postId = Number(id);
   const supabase = await createClient();
   const { data: post, error } = await supabase
     .from("posts")
     .select("id, title, content, created_at, user_id")
-    .eq("id", postId)
+    .eq("id", id)
     .maybeSingle();
 
   if (error || !post) {
     notFound();
   }
 
-  const comments = await getCommentsByPostId(postId);
+  const comments: any[] = [];  // 댓글 기능은 나중에 구현
 
   const createdAtLabel = post.created_at
     ? new Date(post.created_at).toLocaleDateString("ko-KR")
@@ -83,7 +82,7 @@ export default async function PostDetailPage({
         </CardContent>
       </Card>
 
-      <CommentSection postId={postId} comments={comments} />
+      <CommentSection postId={post.id} comments={comments} />
     </div>
   );
 }
