@@ -20,4 +20,13 @@ Agents working on this repository must follow the rules in `.agent/rules/project
 	- Ch8 컬럼명은 변경하지 않습니다. `profiles`(`id`, `username`, `avatar_url`, `role`), `posts`(`id`, `user_id`, `title`, `content`, `created_at`).
 	- 수정/삭제 UI는 구현하되, 권한 검증은 Ch11 RLS로 처리함을 문서에 명시합니다.
 
+- Ch11(RLS) 지침:
+	- RLS는 Supabase SQL Editor 직접 실행이 아니라 Supabase CLI 마이그레이션으로 기록합니다.
+	- 보안은 클라이언트 `if` 분기로 강제하지 않고, RLS 정책으로 DB 레벨에서 강제합니다.
+	- `posts` 정책은 `posts.user_id`와 `auth.uid()` 기준으로 작성합니다.
+	- 클라이언트 UI 분기는 보안이 아니며, 실제 보안은 RLS가 담당합니다.
+	- `service_role` 키는 클라이언트에서 절대 사용하지 않습니다.
+	- RLS SQL은 반드시 `supabase/migrations/` 파일로 남겨 추적 가능한 변경 이력을 유지합니다.
+	- RLS 적용 대상(아직 SQL 작성 전): `posts`(SELECT/INSERT/UPDATE/DELETE), 필요 시 `profiles`(본인 수정)
+
 When creating or modifying auth-related code, prefer the Ch9 교재 기준 and record any differences with the local `package.json` versions in PR descriptions.

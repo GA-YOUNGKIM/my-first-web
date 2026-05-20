@@ -268,3 +268,32 @@ posts.user_id -> profiles.id
   - `service_role` 키의 클라이언트 노출이 없는지 확인
 
 참고: 위 교재 기준과 로컬 설치 버전이 다를 수 있으므로, 코드 수정 시에는 두 기준을 함께 표기하거나 빌드 검증을 먼저 진행하세요.
+
+## Ch11 — 보안 아키텍처 (RLS)
+
+Ch11부터는 UI 분기만으로 권한을 제어하지 않고, 데이터베이스 레벨의 RLS를 보안 기준으로 사용합니다.
+
+- 정책 작성 방식:
+  - Supabase SQL Editor에서 수동 실행하지 않고, Supabase CLI 마이그레이션 파일로 남깁니다.
+  - 정책 변경 이력은 `supabase/migrations/`에 누적합니다.
+- 핵심 기준:
+  - `posts`는 `user_id`와 `auth.uid()` 일치를 기준으로 작성자 권한을 판단합니다.
+  - 보안 계층을 분리합니다: UI 분기(UX)와 RLS(DB 보안).
+  - 클라이언트의 수정/삭제 버튼 노출 제어는 UX이며, 보안 통제는 RLS가 담당합니다.
+  - `service_role` 키는 클라이언트 코드에서 절대 사용하지 않습니다.
+
+### Ch11 posts 보호 정책 목록 (적용 완료)
+
+- `posts`
+  - `posts_select_public_read`: SELECT는 누구나 허용 (`USING (true)`)
+  - `posts_insert_authenticated_owner_only`: 로그인 사용자 본인 INSERT만 허용 (`WITH CHECK (auth.uid() = user_id)`)
+  - `posts_update_authenticated_owner_only`: 작성자 본인 UPDATE만 허용 (`USING` + `WITH CHECK`)
+  - `posts_delete_authenticated_owner_only`: 작성자 본인 DELETE만 허용 (`USING`)
+
+### Ch11 마이그레이션 경로
+
+- `supabase/migrations/20260520054422_add_posts_rls.sql`
+
+### 향후 확장 대상
+
+- `profiles` (선택): 본인 프로필 수정 정책(`id = auth.uid()`) 추가 여부 결정

@@ -2,10 +2,10 @@
 
 ## 현재 상태
 
-- 마지막 작업일: 2026-05-18
+- 마지막 작업일: 2026-05-20
 - 완료된 작업: 홈/목록/상세/작성/수정 페이지, 마이페이지, 댓글 기능, shadcn/ui 적용, Supabase Auth 이메일/비밀번호 인증 구현, 로그인/회원가입 페이지, AuthProvider/useAuth Hook, Header 로그인 상태 분기, middleware.ts 보호 라우트, 게시글 CRUD(Supabase), npm build 검증, Vercel 배포
 - 진행 중: 없음
-- 미착수: Supabase 실시간 구독(Realtime), RLS 정책(Row-Level Security)
+- 미착수: Supabase 실시간 구독(Realtime), `profiles` RLS 범위 확정(필요 시)
 
 ## Ch9~Ch10 완료 작업 파일
 
@@ -57,6 +57,55 @@
 - 환경변수 이름(Ch8 유지): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 - 인증은 이메일/비밀번호만 사용하며, 로그인은 `signInWithPassword`를 사용합니다. `service_role` 키는 클라이언트에 두지 않습니다.
 - Supabase 대시보드 메뉴 안내는 2026년 5월 기준 UI를 따릅니다.
+
+### 버전 기준 (교재 기준 vs 현재 설치 기준)
+
+- 교재 기준:
+	- Next.js `16.2.1`
+	- React `19.2.4`
+	- TypeScript `5.x`
+	- Tailwind CSS `4.x`
+	- shadcn/ui 최신
+	- `@supabase/supabase-js` `2.47.12`
+	- `@supabase/ssr` `0.5.2`
+- 현재 설치 기준(`package.json`):
+	- Next.js `16.2.1`
+	- React `19.2.4`
+	- TypeScript `^5`
+	- Tailwind CSS `^4`
+	- shadcn `^4.6.0`
+	- `@supabase/supabase-js` `^2.105.4`
+	- `@supabase/ssr` `^0.10.3`
+
+## Ch11 RLS 적용 상태 (완료)
+
+- `posts` 테이블 RLS 활성화 완료
+- RLS 정책은 SQL Editor 직접 실행이 아니라 Supabase CLI 마이그레이션으로 관리
+- 클라이언트 UI 분기(수정/삭제 버튼 노출)는 UX 제어이며, 실제 보안은 RLS가 담당
+- `service_role` 키는 클라이언트에서 사용하지 않음
+
+### 적용 정책
+
+- SELECT: 누구나 읽기 가능 (`USING (true)`)
+- INSERT: 로그인 사용자 본인만 작성 가능 (`WITH CHECK (auth.uid() = user_id)`)
+- UPDATE: 작성자만 수정 가능 (`USING (auth.uid() = user_id)` + `WITH CHECK (auth.uid() = user_id)`)
+- DELETE: 작성자만 삭제 가능 (`USING (auth.uid() = user_id)`)
+
+### 마이그레이션 파일 경로
+
+- `supabase/migrations/20260520054422_add_posts_rls.sql`
+
+### 테스트 결과 (Ch11 posts RLS 시나리오)
+
+- 비로그인 시나리오:
+	- 조회(SELECT): 허용
+	- 작성(INSERT): 차단
+- 사용자 A 시나리오:
+	- 본인 글 작성/수정/삭제: 허용
+- 사용자 B 시나리오:
+	- 사용자 A 글 수정/삭제: 차단
+
+참고: 위 시나리오는 현재 적용된 정책 정의와 `db push` 적용 상태 기준입니다.
 
 ## Ch9 해결된 이슈
 

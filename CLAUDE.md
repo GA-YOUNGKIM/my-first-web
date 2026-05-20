@@ -14,3 +14,11 @@ See `.agent/rules/project.md` for Ch9 Supabase-specific agent rules (version pol
 - `AuthProvider`/`useAuth()`로 현재 유저 식별 후 `posts.user_id`와 매칭
 - Ch8 컬럼명은 변경하지 않음: `profiles`(`id`, `username`, `avatar_url`, `role`), `posts`(`id`, `user_id`, `title`, `content`, `created_at`)
 - 수정/삭제 UI는 UX 차원에서 구현하되, 권한 검증은 Ch11에서 RLS로 처리
+
+추가(Ch11): RLS 적용 시 다음을 준수하세요:
+
+- RLS는 Supabase SQL Editor 직접 실행이 아니라 Supabase CLI 마이그레이션으로 기록
+- `posts` 정책은 `posts.user_id`와 `auth.uid()` 기준으로 작성
+- 클라이언트 UI 분기는 보안이 아니며 실제 보안은 RLS가 담당
+- `service_role` 키는 클라이언트에서 절대 사용 금지
+- 적용 대상(아직 SQL 작성 전): `posts`(SELECT/INSERT/UPDATE/DELETE), 필요 시 `profiles`(본인 수정)

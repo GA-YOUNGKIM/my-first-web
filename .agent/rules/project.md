@@ -47,3 +47,17 @@
   3. `next/router` 또는 `pages/` 폴더 생성이 감지되면 경고 및 수정 제안.
 
 - 문서화: 이 파일은 에이전트와 사람이 보는 규칙의 기준점입니다. 변경 시 변경 이유를 커밋 메시지에 명시하세요.
+
+## Ch11 RLS 규칙 (사전 적용)
+
+- RLS 정책은 Supabase SQL Editor에서 직접 실행하지 않고, Supabase CLI 마이그레이션으로 생성/적용합니다.
+- `posts` 권한 정책은 `posts.user_id = auth.uid()` 기준으로 작성합니다.
+- 클라이언트 UI(수정/삭제 버튼 노출) 분기는 UX 제어이며 보안 정책이 아닙니다. 실제 보안은 RLS에서 강제합니다.
+- `service_role` 키는 클라이언트에 절대 노출하거나 사용하지 않습니다.
+
+- RLS 적용 대상(아직 SQL 작성 전):
+  1. `posts` SELECT 정책
+  2. `posts` INSERT 정책 (`user_id = auth.uid()`)
+  3. `posts` UPDATE 정책 (작성자 본인)
+  4. `posts` DELETE 정책 (작성자 본인)
+  5. 필요 시 `profiles` UPDATE 정책 (`id = auth.uid()`)
