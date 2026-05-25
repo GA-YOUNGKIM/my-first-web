@@ -11,12 +11,11 @@ export default async function EditPostPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const postId = Number(id);
   const supabase = await createClient();
   const { data: post, error } = await supabase
     .from("posts")
     .select("id, title, content, user_id")
-    .eq("id", postId)
+    .eq("id", id)
     .maybeSingle();
 
   if (error || !post) {

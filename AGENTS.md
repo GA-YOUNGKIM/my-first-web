@@ -28,5 +28,7 @@ Agents working on this repository must follow the rules in `.agent/rules/project
 	- `service_role` 키는 클라이언트에서 절대 사용하지 않습니다.
 	- RLS SQL은 반드시 `supabase/migrations/` 파일로 남겨 추적 가능한 변경 이력을 유지합니다.
 	- RLS 적용 대상(아직 SQL 작성 전): `posts`(SELECT/INSERT/UPDATE/DELETE), 필요 시 `profiles`(본인 수정)
+	- 보안 강제는 클라이언트 `if`문이 아니라 DB RLS 정책으로 수행합니다.
+	- Ch11 검증은 비로그인 / 사용자 A / 사용자 B 시나리오로 기록합니다.
 
 When creating or modifying auth-related code, prefer the Ch9 교재 기준 and record any differences with the local `package.json` versions in PR descriptions.

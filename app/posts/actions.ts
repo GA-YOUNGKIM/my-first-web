@@ -42,7 +42,7 @@ export async function createPostAction(formData: FormData) {
   redirect(`/posts/${post.id}`);
 }
 
-export async function updatePostAction(id: number, formData: FormData) {
+export async function updatePostAction(id: string, formData: FormData) {
   const title = readString(formData, "title");
   const content = readString(formData, "content");
 

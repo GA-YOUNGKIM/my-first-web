@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 
 interface PostDetailActionsProps {
-  postId: number;
+  postId: string;
   postUserId: string;
 }
 

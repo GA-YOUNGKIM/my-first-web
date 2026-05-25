@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 interface PostEditFormProps {
-  postId: number;
+  postId: string;
   postUserId: string;
   initialTitle: string;
   initialContent: string;
