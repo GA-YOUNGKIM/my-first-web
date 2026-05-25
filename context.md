@@ -2,10 +2,11 @@
 
 ## 현재 상태
 
-- 마지막 작업일: 2026-05-20
+- 마지막 작업일: 2026-05-25
 - 완료된 작업: 홈/목록/상세/작성/수정 페이지, 마이페이지, 댓글 기능, shadcn/ui 적용, Supabase Auth 이메일/비밀번호 인증 구현, 로그인/회원가입 페이지, AuthProvider/useAuth Hook, Header 로그인 상태 분기, middleware.ts 보호 라우트, 게시글 CRUD(Supabase), npm build 검증, Vercel 배포
 - 진행 중: 없음
-- 미착수: Supabase 실시간 구독(Realtime), `profiles` RLS 범위 확정(필요 시)
+- 미착수: Supabase 실시간 구독(Realtime)
+- Ch11 RLS 적용 대상: `posts`(필수), `profiles`(필요 시)
 
 ## Ch9~Ch10 완료 작업 파일
 
@@ -77,7 +78,7 @@
 	- `@supabase/supabase-js` `^2.105.4`
 	- `@supabase/ssr` `^0.10.3`
 
-## Ch11 RLS 적용 상태 (완료)
+## Ch11 RLS 적용 상태
 
 - `posts` 테이블 RLS 활성화 완료
 - RLS 정책은 SQL Editor 직접 실행이 아니라 Supabase CLI 마이그레이션으로 관리
@@ -93,7 +94,7 @@
 
 ### 마이그레이션 파일 경로
 
-- `supabase/migrations/20260520054422_add_posts_rls.sql`
+- `supabase/migrations/20260525100138_add_posts_rls.sql`
 
 ### 테스트 결과 (Ch11 posts RLS 시나리오)
 
@@ -104,6 +105,11 @@
 	- 본인 글 작성/수정/삭제: 허용
 - 사용자 B 시나리오:
 	- 사용자 A 글 수정/삭제: 차단
+
+보충 메모:
+
+- 비로그인 작성 차단은 `/posts/new`와 `/posts/:path*/edit` 리다이렉트로도 확인했습니다.
+- 브라우저에서 사용자 A/B 계정의 최종 우회 검증은 Supabase 가입/로그인 레이트 리밋 때문에 제한될 수 있습니다.
 
 참고: 위 시나리오는 현재 적용된 정책 정의와 `db push` 적용 상태 기준입니다.
 

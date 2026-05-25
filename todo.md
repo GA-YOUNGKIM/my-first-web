@@ -62,21 +62,24 @@ Ch10 완료 메모:
 - [x] 댓글 기능
 - [x] Ch11 시작 전 기준 문서 정비 (context/todo/ARCHITECTURE + 에이전트 규칙)
 - [x] posts RLS 마이그레이션 생성 (`supabase/migrations/20260520054422_add_posts_rls.sql`)
+- [x] posts RLS 마이그레이션 추가 생성 (`supabase/migrations/20260525100138_add_posts_rls.sql`)
 - [x] `npx supabase db push` 적용
 - [x] 보안 키 노출 grep 점검 (`service_role`, `SUPABASE_SERVICE_ROLE`, `sb_secret_`, `sbp_`)
 - [x] 빌드 검증 (`npm run build`)
+- [x] 비로그인 우회 테스트 확인 (`/posts/new`, `/posts/:path*/edit` -> `/login`)
 - [ ] 배포 재검증 (RLS 반영 후 운영 URL 동작 확인)
 - [ ] 다른 계정 우회 테스트 최종 기록 (브라우저 실행 로그/스크린샷 기준)
 
-## Ch11 RLS 완료 메모
+## Ch11 RLS 기준 메모
 
 - RLS는 SQL Editor 직접 실행이 아니라 Supabase CLI 마이그레이션으로 기록합니다.
+- 보안은 클라이언트 if문이 아니라 RLS 정책으로 강제합니다.
 - `posts` 정책 기준은 `posts.user_id = auth.uid()`입니다.
 - 클라이언트 UI 분기(수정/삭제 버튼 노출)는 보안이 아니며, 실제 보안은 RLS가 담당합니다.
 - `service_role` 키는 클라이언트에서 절대 사용하지 않습니다.
 - 중복 생성 방지를 위해 정책 생성 전 `DROP POLICY IF EXISTS`를 사용합니다.
 
-## Ch11 RLS 적용 대상(현재 적용)
+## Ch11 RLS 적용 대상(확정)
 
 - `posts`: SELECT/INSERT/UPDATE/DELETE 정책
 	- INSERT/UPDATE/DELETE는 작성자 본인(`user_id = auth.uid()`) 기준
