@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { getPosts } from "@/lib/post-repository";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,25 +9,7 @@ import {
 } from "@/components/ui/card";
 
 export default async function PostsPage() {
-  const supabase = await createClient();
-  const { data: posts, error } = await supabase
-    .from("posts")
-    .select("id, title, content, created_at, user_id")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    return (
-      <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-        <Card className="border border-border bg-card shadow-sm">
-          <CardContent className="px-6 py-10 text-center text-sm text-muted-foreground">
-            오류가 발생했습니다.
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const postList = posts ?? [];
+  const postList = await getPosts();
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
@@ -72,9 +54,9 @@ export default async function PostsPage() {
                       </span>
                       <time
                         className="text-muted-foreground"
-                        dateTime={post.created_at ?? ""}
+                        dateTime={post.date}
                       >
-                        {post.created_at ? new Date(post.created_at).toLocaleDateString("ko-KR") : ""}
+                        {post.date}
                       </time>
                     </div>
 

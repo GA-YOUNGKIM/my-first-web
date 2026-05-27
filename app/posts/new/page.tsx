@@ -15,8 +15,38 @@ export default function NewPostPage() {
   const { user, loading } = useAuth();
   const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string>("");
-  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [titleError, setTitleError] = useState<string>("");
+  const [contentError, setContentError] = useState<string>("");
+  const [formError, setFormError] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  function validateTitle(value: string): string {
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) {
+      return "제목을 입력해 주세요.";
+    }
+
+    if (trimmedValue.length < 2) {
+      return "제목은 2자 이상 입력해 주세요.";
+    }
+
+    return "";
+  }
+
+  function validateContent(value: string): string {
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) {
+      return "내용을 입력해 주세요.";
+    }
+
+    if (trimmedValue.length < 10) {
+      return "내용은 10자 이상 입력해 주세요.";
+    }
+
+    return "";
+  }
 
   useEffect(() => {
     if (!loading && !user) {
@@ -26,21 +56,26 @@ export default function NewPostPage() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
-    setErrorMessage("");
+    setFormError("");
+
+    const nextTitleError = validateTitle(title);
+    const nextContentError = validateContent(content);
+
+    setTitleError(nextTitleError);
+    setContentError(nextContentError);
+
+    if (nextTitleError || nextContentError) {
+      return;
+    }
 
     if (!user) {
-      setErrorMessage("로그인이 필요합니다.");
+      setFormError("로그인이 필요합니다.");
       router.replace("/login");
       return;
     }
 
     const trimmedTitle = title.trim();
     const trimmedContent = content.trim();
-
-    if (!trimmedTitle || !trimmedContent) {
-      setErrorMessage("제목과 내용을 입력해 주세요.");
-      return;
-    }
 
     setIsSubmitting(true);
 
@@ -57,13 +92,15 @@ export default function NewPostPage() {
         .single();
 
       if (error || !data) {
-        setErrorMessage("저장에 실패했습니다.");
+        console.error("게시글 작성에 실패했습니다.", error);
+        setFormError("게시글을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.");
         return;
       }
 
       router.push(`/posts/${data.id}`);
-    } catch {
-      setErrorMessage("저장에 실패했습니다.");
+    } catch (error) {
+      console.error("게시글 작성 중 예외가 발생했습니다.", error);
+      setFormError("게시글을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.");
     } finally {
       setIsSubmitting(false);
     }
@@ -122,10 +159,21 @@ export default function NewPostPage() {
                 name="title"
                 placeholder="제목을 입력하세요"
                 value={title}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setTitle(event.target.value)}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  const nextValue = event.target.value;
+                  setTitle(nextValue);
+                  setTitleError(validateTitle(nextValue));
+                }}
                 required
+                aria-invalid={Boolean(titleError)}
+                aria-describedby={titleError ? "title-error" : undefined}
                 className="h-11 rounded-xl px-4"
               />
+              {titleError ? (
+                <p id="title-error" className="text-sm text-destructive">
+                  {titleError}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -137,15 +185,26 @@ export default function NewPostPage() {
                 name="content"
                 placeholder="여기에 내용을 작성하세요..."
                 value={content}
-                onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setContent(event.target.value)}
+                onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
+                  const nextValue = event.target.value;
+                  setContent(nextValue);
+                  setContentError(validateContent(nextValue));
+                }}
                 required
                 rows={10}
+                aria-invalid={Boolean(contentError)}
+                aria-describedby={contentError ? "content-error" : undefined}
                 className="min-h-64 rounded-xl border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground"
               />
+              {contentError ? (
+                <p id="content-error" className="text-sm text-destructive">
+                  {contentError}
+                </p>
+              ) : null}
             </div>
 
-            {errorMessage ? (
-              <p className="text-sm text-destructive">{errorMessage}</p>
+            {formError ? (
+              <p className="text-sm text-destructive">{formError}</p>
             ) : null}
 
             <div className="flex flex-col gap-3 pt-2 sm:flex-row">

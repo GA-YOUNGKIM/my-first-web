@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { CommentSection } from "@/components/comment-section";
-import { PostDetailActions } from "@/components/post-detail-actions";
 import { getCommentsByPostId } from "@/lib/comments";
-import { createClient } from "@/lib/supabase/server";
+import { getPostById } from "@/lib/post-repository";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { notFound } from "next/navigation";
@@ -13,22 +12,13 @@ export default async function PostDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
-  const { data: post, error } = await supabase
-    .from("posts")
-    .select("id, title, content, created_at, user_id")
-    .eq("id", id)
-    .maybeSingle();
+  const post = await getPostById(Number(id));
 
-  if (error || !post) {
+  if (!post) {
     notFound();
   }
 
-  const comments: any[] = [];  // 댓글 기능은 나중에 구현
-
-  const createdAtLabel = post.created_at
-    ? new Date(post.created_at).toLocaleDateString("ko-KR")
-    : "";
+  const comments = await getCommentsByPostId(post.id);
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
@@ -46,8 +36,8 @@ export default async function PostDetailPage({
               <span className="rounded-full bg-muted px-3 py-1 font-semibold uppercase tracking-wide text-muted-foreground">
                 post
               </span>
-              <time className="font-medium text-muted-foreground" dateTime={post.created_at ?? ""}>
-                {createdAtLabel}
+              <time className="font-medium text-muted-foreground" dateTime={post.date}>
+                {post.date}
               </time>
             </div>
 
@@ -55,7 +45,7 @@ export default async function PostDetailPage({
               {post.title}
             </h1>
 
-            <p className="mt-6 text-xs text-muted-foreground">작성자 ID: {post.user_id}</p>
+            <p className="mt-6 text-xs text-muted-foreground">작성자: {post.author}</p>
           </header>
 
           <div className="px-5 py-7 sm:px-8 sm:py-10">
@@ -63,7 +53,6 @@ export default async function PostDetailPage({
               {post.content}
             </div>
 
-            <PostDetailActions postId={post.id} postUserId={post.user_id} />
           </div>
         </CardContent>
       </Card>

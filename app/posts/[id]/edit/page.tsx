@@ -18,7 +18,12 @@ export default async function EditPostPage({
     .eq("id", id)
     .maybeSingle();
 
-  if (error || !post) {
+  if (error) {
+    console.error(`게시글 ${id} 수정 화면을 불러오지 못했습니다.`, error);
+    throw new Error("게시글 수정 화면을 불러오지 못했습니다.");
+  }
+
+  if (!post) {
     notFound();
   }
 

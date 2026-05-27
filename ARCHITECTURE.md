@@ -18,6 +18,7 @@
  - UI: Tailwind CSS 4 + shadcn/ui
  - 인증 및 데이터베이스: Supabase (Auth + PostgreSQL)
  - 렌더링 기준: Server Component 기본, 상호작용이 필요할 때만 Client Component 사용
+ - UX 기준: 데이터가 비는 상태는 안내 카드로, 로딩은 `loading.tsx`로, 예외는 `error.tsx`/`global-error.tsx`로 분리한다
 
   ## 3. 페이지 맵 (App Router URL 기준)
 
@@ -235,10 +236,33 @@ posts.user_id -> profiles.id
 - 공개 경로: `/`, `/posts`, `/posts/[id]`, `/login`, `/signup`
 - 보호 경로: `/posts/new`, `/posts/[id]/edit`, `/mypage`, `/mypage/:path*`
 
+## 8-3. 에러 메시지와 폼 검증 (Ch12)
+
+- `lib/error-message.ts`는 Supabase/네트워크 에러를 사용자 문구로 변환합니다.
+- 변환 규칙:
+  - `42501` 또는 `row-level security` 포함: `이 작업을 수행할 권한이 없습니다.`
+  - `Failed to fetch` 포함: `인터넷 연결을 확인해주세요.`
+  - `not found` 계열: `요청한 게시글을 찾을 수 없습니다.`
+  - 그 외: `일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.`
+- `app/login/page.tsx`와 `app/signup/page.tsx`는 Supabase 원문을 `console.error()`로 남기고, 화면에는 변환된 메시지만 표시합니다.
+- `app/posts/new/page.tsx`는 제목 필수/최소 2자, 내용 필수/최소 10자, 제출 중 버튼 비활성화, 입력 아래 에러 메시지 표시 규칙을 적용합니다.
+
 ## 9. 참고
 
 이 문서는 현재 구현 방향을 설명하는 초안입니다.
 나중에 페이지가 추가되면 페이지 맵과 유저 플로우를 이어서 보강하면 됩니다.
+
+## Ch12 — 에러 처리와 UX 개선
+
+Ch12에서는 데이터 상태별 화면을 분리해서 사용자에게 멈춘 느낌이 들지 않도록 정리합니다.
+
+- 로딩: 각 라우트의 `loading.tsx`에서 스켈레톤 UI를 보여줍니다.
+- 빈 상태: 목록/댓글처럼 데이터가 없는 경우는 안내 카드와 다음 행동 버튼을 제공합니다.
+- 오류: `error.tsx`는 세그먼트별, `global-error.tsx`는 앱 전체 fallback으로 사용합니다.
+- 404: `not-found.tsx`는 존재하지 않는 페이지나 게시글에 대한 안내 화면입니다.
+- 에러 로그: 개발자용 상세 정보는 `console.error()`에 남기고 사용자 화면에는 친절한 메시지만 보여줍니다.
+- 공통 메시지 변환: `lib/error-message.ts`가 Supabase/네트워크 예외를 사용자 언어로 변환합니다.
+- 폼 검증: `/posts/new`는 제출 전에 제목/내용 길이를 검사하고, 실패는 입력 아래에 표시합니다.
 
 ## Supabase / Version Policy (Ch9 기준)
 

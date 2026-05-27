@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signUpWithEmail } from "@/lib/auth";
+import { getUserFriendlyErrorMessage } from "@/lib/error-message";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,18 +35,30 @@ export default function SignupPage() {
       return;
     }
 
-    const { data, error: authError } = await signUpWithEmail(email, password, name);
+    try {
+      const { data, error: authError } = await signUpWithEmail(email, password, name);
 
-    if (authError) {
-      setError("회원가입에 실패했습니다. 이미 가입된 이메일인지 확인해 주세요.");
+      if (authError) {
+        console.error("회원가입 실패:", authError);
+        setError(getUserFriendlyErrorMessage(authError));
+        return;
+      }
+
+      if (!data) {
+        setError("일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        return;
+      }
+
+      setSuccess(true);
+      setTimeout(() => {
+        router.push("/login");
+      }, 2000);
+    } catch (error) {
+      console.error("회원가입 중 예외가 발생했습니다.", error);
+      setError(getUserFriendlyErrorMessage(error));
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setSuccess(true);
-    setTimeout(() => {
-      router.push("/login");
-    }, 2000);
   }
 
   if (success) {

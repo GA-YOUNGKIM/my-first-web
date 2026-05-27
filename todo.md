@@ -67,8 +67,13 @@ Ch10 완료 메모:
 - [x] 보안 키 노출 grep 점검 (`service_role`, `SUPABASE_SERVICE_ROLE`, `sb_secret_`, `sbp_`)
 - [x] 빌드 검증 (`npm run build`)
 - [x] 비로그인 우회 테스트 확인 (`/posts/new`, `/posts/:path*/edit` -> `/login`)
+- [x] Ch12 로딩/에러 UX 정리 (`app/error.tsx`, `app/global-error.tsx`, `app/not-found.tsx`, `app/posts/error.tsx`, `app/posts/loading.tsx`, `app/posts/[id]/not-found.tsx`, `app/posts/[id]/loading.tsx`, `app/mypage/error.tsx`, `app/mypage/loading.tsx`)
+- [x] 공통 에러 메시지 변환 유틸 추가 (`lib/error-message.ts`)
+- [x] `/posts/new` 클라이언트 유효성 검증 추가 (제목 2자 이상, 내용 10자 이상, 제출 중 버튼 비활성화)
+- [x] 로그인/회원가입 화면에 공통 에러 메시지 변환 적용
 - [ ] 배포 재검증 (RLS 반영 후 운영 URL 동작 확인)
 - [x] 다른 계정 우회 테스트 확인 (사용자 B가 사용자 A 글 수정/삭제 차단)
+- [ ] Vercel production URL 수동 검증: `/posts` 오류 원인 확인 필요
 
 ## Ch11 RLS 기준 메모
 
@@ -89,6 +94,15 @@ Ch10 완료 메모:
 - `profiles`(선택): 본인 프로필 수정(`id = auth.uid()`) 정책 여부 검토
 
 ## 진행률: 20/22 (91%)
+
+## Ch12 UX 정리 메모
+
+- 데이터 로딩은 `loading.tsx` 스켈레톤으로 처리합니다.
+- 빈 데이터는 빈 화면 대신 안내 카드로 처리합니다.
+- 예외는 `error.tsx`/`global-error.tsx`로 분리하고, 사용자 화면에는 친절한 문구만 표시합니다.
+- 개발자용 상세 에러는 `console.error()`에 남깁니다.
+- 공통 에러 문구 변환은 `lib/error-message.ts`에서 관리합니다.
+- `/posts/new`는 제목 2자 이상, 내용 10자 이상, 제출 중 버튼 비활성화를 적용합니다.
 
 ## Ch9 완료 요약
 

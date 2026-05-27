@@ -2,11 +2,20 @@
 
 ## 현재 상태
 
-- 마지막 작업일: 2026-05-25
-- 완료된 작업: 홈/목록/상세/작성/수정 페이지, 마이페이지, 댓글 기능, shadcn/ui 적용, Supabase Auth 이메일/비밀번호 인증 구현, 로그인/회원가입 페이지, AuthProvider/useAuth Hook, Header 로그인 상태 분기, middleware.ts 보호 라우트, 게시글 CRUD(Supabase), npm build 검증, Vercel 배포
+- 마지막 작업일: 2026-05-27
+- 완료된 작업: 홈/목록/상세/작성/수정 페이지, 마이페이지, 댓글 기능, shadcn/ui 적용, Supabase Auth 이메일/비밀번호 인증 구현, 로그인/회원가입 페이지, AuthProvider/useAuth Hook, Header 로그인 상태 분기, middleware.ts 보호 라우트, 게시글 CRUD(Supabase), 로딩/에러/빈 상태 UX, npm build 검증, Vercel 배포
 - 진행 중: 없음
 - 미착수: Supabase 실시간 구독(Realtime)
 - Ch11 RLS 적용 대상: `posts`(필수), `profiles`(필요 시)
+- Ch12 UX 정리: 공통 에러 메시지 변환 유틸과 화면별 로딩/에러 경계 적용 완료
+
+## 최종 검증 보고서
+
+- 테스트 환경(local): `npx playwright test` 통과, 종료 코드 0
+- 테스트 환경(Vercel): 운영 URL을 직접 열어 확인함
+- Playwright 테스트 결과: `tests/auth-crud.spec.ts` 추가 후 실행 기준으로 통과
+- 배포 URL 수동 검증 결과: `/posts/new`는 비로그인 시 `/login?from=%2Fposts%2Fnew`로 리다이렉트됨. `/posts`는 운영 환경에서 오류 화면이 표시됨
+- 아직 확인 필요한 항목: 운영 환경의 `/posts` 오류 원인, 로그인 후 `/posts/new` 작성 흐름의 전체 재검증
 
 ## Ch9~Ch10 완료 작업 파일
 
@@ -26,8 +35,16 @@
 - `app/posts/actions.ts` (게시글 insert/update/delete 서버 액션)
 - `components/post-detail-actions.tsx` (상세 화면 수정/삭제 UI 분기와 delete)
 - `components/post-edit-form.tsx` (수정 폼 UI와 update)
+- `app/error.tsx` (루트 에러 경계)
+- `app/global-error.tsx` (전역 에러 경계)
+- `app/not-found.tsx` (전역 404)
+- `app/posts/error.tsx` (게시글 목록 에러 경계)
+- `app/posts/[id]/not-found.tsx` (게시글 상세 404)
 - `app/posts/loading.tsx` (목록 로딩)
 - `app/posts/[id]/loading.tsx` (상세 로딩)
+- `app/mypage/error.tsx` (마이페이지 에러 경계)
+- `app/mypage/loading.tsx` (마이페이지 로딩)
+- `lib/error-message.ts` (Supabase/네트워크 에러 메시지 변환)
 - `package.json` (Supabase 패키지 버전 확인)
 - `.env.local` (Supabase 환경변수)
 
@@ -49,6 +66,11 @@
 - CRUD 쿼리 패턴: 목록/상세는 `select`, 작성은 `insert`, 수정은 `update`, 삭제는 `delete`를 사용
 - 작성자 UI 분기: `user.id === post.user_id`일 때만 수정/삭제 UI를 노출
 - 실제 보안은 Ch11 RLS에서 처리하며, 현재 UI 분기는 화면 제어만 담당
+- 화면 상태 원칙: 로딩은 `loading.tsx`, 예외는 `error.tsx`/`global-error.tsx`, 없는 글이나 경로는 `not-found.tsx`로 분리한다
+- 빈 상태 원칙: 데이터가 없을 때는 빈 화면 대신 안내 카드와 다음 행동 버튼을 보여준다
+- 공통 에러 메시지 변환: `lib/error-message.ts`가 `42501`/`row-level security`, `Failed to fetch`, `not found` 계열을 사용자 문구로 매핑한다
+- `/posts/new` 검증 규칙: 제목은 필수·최소 2자, 내용은 필수·최소 10자, 제출 중 버튼 비활성화, 필드 아래 에러 메시지 표시
+- `/login` / `/signup` 에러 규칙: Supabase 원문은 `console.error()`로만 남기고 화면에는 변환된 메시지만 표시한다
 
 ### Supabase / 버전 및 환경변수 (Ch9 기준)
 
@@ -151,6 +173,10 @@
 	- 홈 페이지와 `/posts/new` 페이지를 브라우저에서 확인함
 	- 홈은 히어로, 검색, CTA, 최근 글 카드 구조가 와이어프레임과 맞음
 	- 작성 페이지는 제목/내용 입력과 저장 버튼 배치가 의도대로 노출됨
+
+- 최종 검증 요약
+	- 로컬 Playwright: 통과
+	- Vercel 배포 URL 수동 확인: 부분 확인, `/posts` 오류는 확인 필요
 
 ## 남은 작업
 
