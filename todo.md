@@ -71,9 +71,9 @@ Ch10 완료 메모:
 - [x] 공통 에러 메시지 변환 유틸 추가 (`lib/error-message.ts`)
 - [x] `/posts/new` 클라이언트 유효성 검증 추가 (제목 2자 이상, 내용 10자 이상, 제출 중 버튼 비활성화)
 - [x] 로그인/회원가입 화면에 공통 에러 메시지 변환 적용
-- [ ] 배포 재검증 (RLS 반영 후 운영 URL 동작 확인)
+- [x] 배포 재검증 (운영 URL의 `/posts`, `/posts/1`, `/posts/new` 흐름 확인 완료)
 - [x] 다른 계정 우회 테스트 확인 (사용자 B가 사용자 A 글 수정/삭제 차단)
-- [ ] Vercel production URL 수동 검증: `/posts` 오류 원인 확인 필요
+- [ ] Vercel production URL 수동 검증: 로그인 성공 후 `/posts/new` 작성 흐름 확인 필요
 
 ## Ch11 RLS 기준 메모
 

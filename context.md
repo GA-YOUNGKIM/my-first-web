@@ -13,9 +13,9 @@
 
 - 테스트 환경(local): `npx playwright test` 통과, 종료 코드 0
 - 테스트 환경(Vercel): 운영 URL을 직접 열어 확인함
-- Playwright 테스트 결과: `tests/auth-crud.spec.ts` 추가 후 실행 기준으로 통과
-- 배포 URL 수동 검증 결과: `/posts/new`는 비로그인 시 `/login?from=%2Fposts%2Fnew`로 리다이렉트됨. `/posts`는 운영 환경에서 오류 화면이 표시됨
-- 아직 확인 필요한 항목: 운영 환경의 `/posts` 오류 원인, 로그인 후 `/posts/new` 작성 흐름의 전체 재검증
+- Playwright 테스트 결과: `tests/auth-crud.spec.ts` 실행 기준으로 통과
+- 배포 URL 수동 검증 결과: 홈(`/`), 로그인 페이지(`/login`), 게시글 목록(`/posts`), 게시글 상세(`/posts/1`) 열람 확인됨. `/posts/new`는 비로그인 시 `/login?from=%2Fposts%2Fnew`로 리다이렉트됨
+- 아직 확인 필요한 항목: 로그인 성공 후 `/posts/new` 작성 흐름의 전체 재검증
 
 ## Ch9~Ch10 완료 작업 파일
 
@@ -176,7 +176,7 @@
 
 - 최종 검증 요약
 	- 로컬 Playwright: 통과
-	- Vercel 배포 URL 수동 확인: 부분 확인, `/posts` 오류는 확인 필요
+	- Vercel 배포 URL 수동 확인: 공개 경로 확인 완료, 로그인 후 작성 흐름은 확인 필요
 
 ## 남은 작업
 
