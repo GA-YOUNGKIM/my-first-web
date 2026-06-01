@@ -56,6 +56,14 @@ Ch10 완료 메모:
 - `next/router` 미사용, `service_role` 클라이언트 노출 없음, `auth.signIn()` 미사용
 - 목록/상세/작성/수정 화면에 로딩 또는 빈 상태를 최소 문구로 표시
 
+## Ch10 시작 전 사람 확인 항목
+
+- [ ] 교재 기준과 현재 설치 기준 버전을 함께 확인했는지 점검
+- [ ] `lib/supabase/client.ts`와 `contexts/AuthContext.tsx`를 기준 리소스로 사용할지 확인
+- [ ] `posts` 컬럼명을 Ch8 스키마(`id`, `user_id`, `title`, `content`, `created_at`) 그대로 유지하는지 확인
+- [ ] App Router만 사용하고 `next/router`가 남아 있지 않은지 확인
+- [ ] 수정/삭제 UI는 노출 제어만 담당하고 실제 보안은 Ch11 RLS가 맡는지 확인
+
 ## 3단계: 고급 기능 (Ch11~12)
 
 - [x] 마이페이지
@@ -74,6 +82,7 @@ Ch10 완료 메모:
 - [x] 배포 재검증 (운영 URL의 `/posts`, `/posts/1`, `/posts/new` 흐름 확인 완료)
 - [x] 다른 계정 우회 테스트 확인 (사용자 B가 사용자 A 글 수정/삭제 차단)
 - [ ] Vercel production URL 수동 검증: 로그인 성공 후 `/posts/new` 작성 흐름 확인 필요
+- [ ] 배포 URL 직접 열람 검증 여부 재확인 (현재 Vercel 로그인 화면으로 이동)
 
 ## Ch11 RLS 기준 메모
 

@@ -14,7 +14,7 @@ Tailwind CSS: 4.x
 shadcn/ui: 최신 버전
 ```
 
-**중요**: 이 버전들은 고정입니다. 다른 버전으로 코드를 생성하면 안 됩니다.
+**중요**: 수업 프롬프트와 설명은 교재 기준 버전으로 통일합니다. 다만 실제 설치 버전은 `package.json`이 우선이며, 버전 차이로 빌드 오류가 나면 현재 설치 기준으로 원인을 확인합니다.
 
 ---
 
@@ -473,6 +473,14 @@ export default function Component({ title }: ComponentProps) {
   return <div>{title}</div>;
 }
 ```
+
+### Ch10 시작 전 확인
+
+- `lib/supabase/client.ts`를 브라우저 클라이언트 기준으로 사용합니다.
+- `contexts/AuthContext.tsx`의 `AuthProvider`와 `useAuth()`로 현재 사용자 정보를 읽습니다.
+- `posts` 컬럼명은 `id`, `user_id`, `title`, `content`, `created_at` 그대로 유지합니다.
+- App Router만 사용하고 `next/router`는 쓰지 않습니다.
+- 수정/삭제 UI는 화면 제어용이고, 실제 보안은 Ch11 RLS가 담당합니다.
 
 ---
 

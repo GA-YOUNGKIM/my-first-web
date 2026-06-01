@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { getPosts } from "@/lib/post-repository";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -7,9 +6,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function PostsPage() {
-  const postList = await getPosts();
+  const supabase = await createClient();
+  const { data: postList, error } = await supabase
+    .from("posts")
+    .select("id, title, content, created_at, user_id")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("게시글 목록을 불러오지 못했습니다.", error);
+    throw new Error("게시글 목록을 불러오지 못했습니다.");
+  }
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
@@ -36,11 +45,11 @@ export default async function PostsPage() {
 
         <div className="px-5 py-5 sm:px-8 sm:py-6">
           <div className="mb-5 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-            <span>총 {postList.length}개의 글</span>
+            <span>총 {postList?.length ?? 0}개의 글</span>
             <span>최근 글이 위에 표시됩니다</span>
           </div>
 
-          {postList.length > 0 ? (
+          {postList && postList.length > 0 ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-2">
               {postList.map((post) => (
                 <Card
@@ -54,9 +63,9 @@ export default async function PostsPage() {
                       </span>
                       <time
                         className="text-muted-foreground"
-                        dateTime={post.date}
+                        dateTime={post.created_at}
                       >
-                        {post.date}
+                        {new Date(post.created_at).toLocaleDateString("ko-KR")}
                       </time>
                     </div>
 

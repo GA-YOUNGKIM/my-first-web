@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { CommentSection } from "@/components/comment-section";
-import { getCommentsByPostId } from "@/lib/comments";
-import { getPostById } from "@/lib/post-repository";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { PostDetailActions } from "@/components/post-detail-actions";
 
 export default async function PostDetailPage({
   params,
@@ -12,13 +11,25 @@ export default async function PostDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const post = await getPostById(Number(id));
+  const supabase = await createClient();
+  const currentUserResult = await supabase.auth.getUser();
+  const { data: post, error } = await supabase
+    .from("posts")
+    .select("id, title, content, created_at, user_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    console.error(`게시글 ${id} 상세를 불러오지 못했습니다.`, error);
+    throw new Error("게시글 상세를 불러오지 못했습니다.");
+  }
 
   if (!post) {
     notFound();
   }
 
-  const comments = await getCommentsByPostId(post.id);
+  const currentUserId = currentUserResult.data.user?.id ?? null;
+  const canManagePost = currentUserId === post.user_id;
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
@@ -36,8 +47,8 @@ export default async function PostDetailPage({
               <span className="rounded-full bg-muted px-3 py-1 font-semibold uppercase tracking-wide text-muted-foreground">
                 post
               </span>
-              <time className="font-medium text-muted-foreground" dateTime={post.date}>
-                {post.date}
+              <time className="font-medium text-muted-foreground" dateTime={post.created_at}>
+                {new Date(post.created_at).toLocaleDateString("ko-KR")}
               </time>
             </div>
 
@@ -45,7 +56,7 @@ export default async function PostDetailPage({
               {post.title}
             </h1>
 
-            <p className="mt-6 text-xs text-muted-foreground">작성자: {post.author}</p>
+            <p className="mt-6 text-xs text-muted-foreground">작성자 ID: {post.user_id}</p>
           </header>
 
           <div className="px-5 py-7 sm:px-8 sm:py-10">
@@ -71,7 +82,9 @@ export default async function PostDetailPage({
         </CardContent>
       </Card>
 
-      <CommentSection postId={post.id} comments={comments} />
+      {canManagePost ? (
+        <PostDetailActions postId={String(post.id)} postUserId={post.user_id} />
+      ) : null}
     </div>
   );
 }

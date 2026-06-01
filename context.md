@@ -2,7 +2,7 @@
 
 ## 현재 상태
 
-- 마지막 작업일: 2026-05-27
+- 마지막 작업일: 2026-06-01
 - 완료된 작업: 홈/목록/상세/작성/수정 페이지, 마이페이지, 댓글 기능, shadcn/ui 적용, Supabase Auth 이메일/비밀번호 인증 구현, 로그인/회원가입 페이지, AuthProvider/useAuth Hook, Header 로그인 상태 분기, middleware.ts 보호 라우트, 게시글 CRUD(Supabase), 로딩/에러/빈 상태 UX, npm build 검증, Vercel 배포
 - 진행 중: 없음
 - 미착수: Supabase 실시간 구독(Realtime)
@@ -12,10 +12,10 @@
 ## 최종 검증 보고서
 
 - 테스트 환경(local): `npx playwright test` 통과, 종료 코드 0
-- 테스트 환경(Vercel): 운영 URL을 직접 열어 확인함
+- 테스트 환경(Vercel): 확인 필요
 - Playwright 테스트 결과: `tests/auth-crud.spec.ts` 실행 기준으로 통과
-- 배포 URL 수동 검증 결과: 홈(`/`), 로그인 페이지(`/login`), 게시글 목록(`/posts`), 게시글 상세(`/posts/1`) 열람 확인됨. `/posts/new`는 비로그인 시 `/login?from=%2Fposts%2Fnew`로 리다이렉트됨
-- 아직 확인 필요한 항목: 로그인 성공 후 `/posts/new` 작성 흐름의 전체 재검증
+- 배포 URL 수동 검증 결과: 배포 URL 접속 시 Vercel 로그인 화면으로 이동해 앱 자체는 확인하지 못함
+- 아직 확인 필요한 항목: Vercel production URL에서 로그인 성공 후 `/posts/new` 작성 흐름 전체 재검증, 앱 본문 직접 열람 검증
 
 ## Ch9~Ch10 완료 작업 파일
 
@@ -185,6 +185,7 @@
 ## Ch10 게시글 CRUD 준비 체크리스트
 
 - 목표: Ch8 스키마와 Ch9 인증을 바탕으로 게시글 CRUD를 App Router 환경에서 구현합니다.
+- 확인 기준: 교재 기준과 현재 설치 기준을 함께 적고, 구현과 검증은 현재 설치 기준으로 확인합니다.
 - 사용 리소스:
 	- 브라우저 Supabase 클라이언트: `lib/supabase/client.ts`
 	- 서버 Supabase 클라이언트: `lib/supabase/server.ts` 또는 `@supabase/ssr`의 `createServerClient`
@@ -203,3 +204,4 @@
 	- `profiles` 컬럼명이 Ch8 스키마와 일치하는지 확인 (`id`, `username`, `avatar_url`, `role`)
 	- `next/router`가 사용되지 않았는지 점검
 	- `service_role` 키가 클라이언트 코드에 노출되어 있지 않은지 점검
+	- 수정/삭제 UI는 UX 제어만 담당하고, 실제 보안은 Ch11 RLS가 담당하는지 확인

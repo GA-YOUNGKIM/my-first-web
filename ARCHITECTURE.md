@@ -14,11 +14,31 @@
 
 ## 2. 기술 스택
 
- - 프레임워크: Next.js 16 (App Router only)
- - UI: Tailwind CSS 4 + shadcn/ui
- - 인증 및 데이터베이스: Supabase (Auth + PostgreSQL)
- - 렌더링 기준: Server Component 기본, 상호작용이 필요할 때만 Client Component 사용
- - UX 기준: 데이터가 비는 상태는 안내 카드로, 로딩은 `loading.tsx`로, 예외는 `error.tsx`/`global-error.tsx`로 분리한다
+- 프레임워크: Next.js 16.2.1 (App Router only)
+- UI: Tailwind CSS 4 + shadcn/ui
+- 인증 및 데이터베이스: Supabase (Auth + PostgreSQL)
+- 렌더링 기준: Server Component 기본, 상호작용이 필요할 때만 Client Component 사용
+- UX 기준: 데이터가 비는 상태는 안내 카드로, 로딩은 `loading.tsx`로, 예외는 `error.tsx`/`global-error.tsx`로 분리한다
+
+## 2-1. 버전 정책
+
+- 교재 기준
+  - Next.js: 16.2.1
+  - React: 19.2.4
+  - TypeScript: 5.x
+  - Tailwind CSS: 4.x
+  - shadcn/ui: 최신
+  - `@supabase/supabase-js`: 2.47.12
+  - `@supabase/ssr`: 0.5.2
+- 현재 설치 기준 (`package.json`)
+  - Next.js: 16.2.1
+  - React: 19.2.4
+  - TypeScript: ^5
+  - Tailwind CSS: ^4
+  - shadcn: ^4.6.0
+  - `@supabase/supabase-js`: ^2.105.4
+  - `@supabase/ssr`: ^0.10.3
+- 문서와 예제는 교재 기준으로 적고, 실제 오류 확인과 구현 검증은 현재 설치 기준을 따릅니다.
 
   ## 3. 페이지 맵 (App Router URL 기준)
 
@@ -251,6 +271,14 @@ posts.user_id -> profiles.id
 
 이 문서는 현재 구현 방향을 설명하는 초안입니다.
 나중에 페이지가 추가되면 페이지 맵과 유저 플로우를 이어서 보강하면 됩니다.
+
+## 10. Ch10 시작 전 확인
+
+- `lib/supabase/client.ts`를 브라우저 Supabase 클라이언트 기준으로 사용합니다.
+- `contexts/AuthContext.tsx`의 `AuthProvider`와 `useAuth()`로 현재 로그인 사용자를 확인합니다.
+- `posts` 컬럼명은 `id`, `user_id`, `title`, `content`, `created_at` 그대로 유지합니다.
+- App Router만 사용하고 `next/router`는 사용하지 않습니다.
+- 수정/삭제 UI는 화면 제어용이며, 실제 보안은 Ch11 RLS가 담당합니다.
 
 ## Ch12 — 에러 처리와 UX 개선
 

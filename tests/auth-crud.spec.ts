@@ -43,10 +43,17 @@ test.describe("auth crud e2e", () => {
     await expect(page.getByRole("link", { name: uniqueTitle })).toBeVisible();
   });
 
-  test("거절 경로", async ({ page }) => {
-    await page.goto(appUrl("/posts/new"));
+  test("거절 경로", async ({ browser }) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
 
-    await expect(page).toHaveURL(/\/login(\?|$)/);
-    await expect(page.getByRole("heading", { name: "로그인" })).toBeVisible();
+    try {
+      await page.goto(appUrl("/posts/new"));
+
+      await expect(page).toHaveURL(/\/login(\?|$)/);
+      await expect(page.getByRole("heading", { name: "로그인" })).toBeVisible();
+    } finally {
+      await context.close();
+    }
   });
 });
