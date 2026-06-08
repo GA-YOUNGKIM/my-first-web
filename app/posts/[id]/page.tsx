@@ -28,6 +28,8 @@ export default async function PostDetailPage({
     notFound();
   }
 
+  // 이 UI 분기(canManagePost)는 단순히 사용자 편의를 위한 버튼 노출 제어용입니다.
+  // 실제 수정 및 삭제 동작에 대한 강력한 보안 통제는 데이터베이스 레벨의 Ch11 RLS 정책이 담당합니다.
   const currentUserId = currentUserResult.data.user?.id ?? null;
   const canManagePost = currentUserId === post.user_id;
 

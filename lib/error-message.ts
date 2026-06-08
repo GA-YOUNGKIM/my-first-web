@@ -5,6 +5,10 @@ export function getUserFriendlyErrorMessage(error: unknown): string {
     return "이 작업을 수행할 권한이 없습니다.";
   }
 
+  if (rawMessage.includes("invalid login credentials")) {
+    return "이메일 또는 비밀번호가 잘못되었습니다.";
+  }
+
   if (rawMessage.includes("failed to fetch")) {
     return "인터넷 연결을 확인해주세요.";
   }

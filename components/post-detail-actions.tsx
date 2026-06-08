@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { getUserFriendlyErrorMessage } from "@/lib/error-message";
 
 interface PostDetailActionsProps {
   postId: string;
@@ -27,7 +28,8 @@ export function PostDetailActions({ postId, postUserId }: PostDetailActionsProps
   const { user, loading } = useAuth();
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
-  // UI 분기만 담당한다. 실제 권한 보안은 Ch11 RLS에서 강제한다.
+  // 클라이언트 측의 권한 분기는 단순히 UI 상에서 편의를 위해 버튼을 노출/제어하는 용도입니다.
+  // 실제 쓰기/수정/삭제 권한에 대한 강력한 보안 통제는 데이터베이스의 Ch11 RLS(Row Level Security) 정책이 담당합니다.
   const canManage = user?.id === postUserId;
 
   useEffect(() => {
@@ -56,14 +58,14 @@ export function PostDetailActions({ postId, postUserId }: PostDetailActionsProps
       const { error } = await supabase.from("posts").delete().eq("id", postId);
 
       if (error) {
-        setErrorMessage("게시글을 삭제하지 못했습니다.");
+        setErrorMessage(getUserFriendlyErrorMessage(error));
         return;
       }
 
       router.push("/posts");
       router.refresh();
-    } catch {
-      setErrorMessage("게시글을 삭제하지 못했습니다.");
+    } catch (error) {
+      setErrorMessage(getUserFriendlyErrorMessage(error));
     } finally {
       setIsDeleting(false);
     }

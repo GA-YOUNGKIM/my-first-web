@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { getUserFriendlyErrorMessage } from "@/lib/error-message";
 
 export default function NewPostPage() {
   const router = useRouter();
@@ -93,14 +94,14 @@ export default function NewPostPage() {
 
       if (error || !data) {
         console.error("게시글 작성에 실패했습니다.", error);
-        setFormError("게시글을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+        setFormError(getUserFriendlyErrorMessage(error || new Error("데이터를 저장하지 못했습니다.")));
         return;
       }
 
       router.push(`/posts/${data.id}`);
     } catch (error) {
       console.error("게시글 작성 중 예외가 발생했습니다.", error);
-      setFormError("게시글을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      setFormError(getUserFriendlyErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
