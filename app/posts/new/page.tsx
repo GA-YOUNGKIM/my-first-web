@@ -118,14 +118,18 @@ export default function NewPostPage() {
         imageUrl = publicUrlData.publicUrl;
       }
 
-      // 게시글 insert (image_url 포함)
+      let finalContent = trimmedContent;
+      if (imageUrl) {
+        finalContent += `\n\n![첨부 이미지](${imageUrl})`;
+      }
+
+      // 게시글 insert
       const { data, error } = await supabase
         .from("posts")
         .insert({
           title: trimmedTitle,
-          content: trimmedContent,
+          content: finalContent,
           user_id: user.id,
-          image_url: imageUrl || null,
         })
         .select("id")
         .single();

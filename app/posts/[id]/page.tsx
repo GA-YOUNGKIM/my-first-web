@@ -44,7 +44,7 @@ export default function PostDetailPage({
         const supabase = createClient();
         const { data, error } = await supabase
           .from("posts")
-          .select("id, title, content, created_at, user_id, likes_count")
+          .select("id, title, content, created_at, user_id")
           .eq("id", decodedId)
           .maybeSingle();
 
@@ -60,7 +60,8 @@ export default function PostDetailPage({
         }
 
         setPost(data);
-        setLikesCount(data.likes_count ?? 0);
+        // DB에 likes_count 컬럼이 없으므로 로컬 상태로만 관리
+        setLikesCount(0);
       } catch (err) {
         console.error("예외 발생:", err);
         setErrorMsg("게시글 상세를 불러오지 못했습니다.");
@@ -84,19 +85,8 @@ export default function PostDetailPage({
 
     try {
       const nextLikesCount = likesCount + 1;
-      const supabase = createClient();
-
-      const { error } = await supabase
-        .from("posts")
-        .update({ likes_count: nextLikesCount })
-        .eq("id", post.id);
-
-      if (error) {
-        console.error("좋아요 반영 실패:", error);
-        alert(getUserFriendlyErrorMessage(error));
-        return;
-      }
-
+      
+      // DB에 likes_count 컬럼이 존재하지 않으므로 API 호출 제거 (UI 상태만 업데이트)
       setLikesCount(nextLikesCount);
     } catch (err) {
       console.error("좋아요 중 예외 발생:", err);
