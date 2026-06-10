@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signInWithEmail } from "@/lib/auth";
+import { signInWithPassword } from "@/lib/auth";
 import { getUserFriendlyErrorMessage } from "@/lib/error-message";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +28,7 @@ export default function LoginPage() {
     }
 
     try {
-      const { data, error: authError } = await signInWithEmail(email, password);
+      const { data, error: authError } = await signInWithPassword(email, password);
 
       if (authError) {
         console.error("로그인 실패:", authError);

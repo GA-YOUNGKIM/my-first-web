@@ -8,12 +8,23 @@ import {
 } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function PostsPage() {
+export default async function PostsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ search?: string }>;
+}) {
+  const { search } = await searchParams;
   const supabase = await createClient();
-  const { data: postList, error } = await supabase
+
+  let queryBuilder = supabase
     .from("posts")
-    .select("id, title, content, created_at, user_id")
-    .order("created_at", { ascending: false });
+    .select("id, title, content, created_at, user_id");
+
+  if (search) {
+    queryBuilder = queryBuilder.or(`title.ilike.%${search}%,content.ilike.%${search}%`);
+  }
+
+  const { data: postList, error } = await queryBuilder.order("created_at", { ascending: false });
 
   if (error) {
     console.error("게시글 목록을 불러오지 못했습니다.", error);
@@ -29,23 +40,35 @@ export default async function PostsPage() {
               posts
             </p>
             <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              전체 게시글
+              {search ? `"${search}" 검색 결과` : "전체 게시글"}
             </h1>
             <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
-              최신 글부터 차분하게 읽어보세요. 글이 많아져도 목록이 보기 쉽게 유지됩니다.
+              {search 
+                ? `입력하신 검색어에 해당하는 결과를 Supabase DB에서 조회했습니다.`
+                : `최신 글부터 차분하게 읽어보세요. 글이 많아져도 목록이 보기 쉽게 유지됩니다.`
+              }
             </p>
           </div>
 
-          <Button asChild size="lg" className="h-11 px-6 font-medium whitespace-nowrap">
-            <Link href="/posts/new">
-              <span className="text-xl">+</span> 새 글 쓰기
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            {search && (
+              <Button asChild variant="outline" size="lg" className="h-11 px-6 font-medium whitespace-nowrap">
+                <Link href="/posts">전체 목록</Link>
+              </Button>
+            )}
+            <Button asChild size="lg" className="h-11 px-6 font-medium whitespace-nowrap">
+              <Link href="/posts/new">
+                <span className="text-xl">+</span> 새 글 쓰기
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <div className="px-5 py-5 sm:px-8 sm:py-6">
           <div className="mb-5 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-            <span>총 {postList?.length ?? 0}개의 글</span>
+            <span>
+              {search ? `"${search}" 검색 결과: ` : ""}총 {postList?.length ?? 0}개의 글
+            </span>
             <span>최근 글이 위에 표시됩니다</span>
           </div>
 
@@ -96,9 +119,13 @@ export default async function PostsPage() {
           ) : (
             <Card className="border-dashed border-border bg-background">
               <CardContent className="flex flex-col items-center justify-center gap-4 px-6 py-12 text-center">
-                <p className="text-sm text-muted-foreground">글이 없습니다.</p>
+                <p className="text-sm text-muted-foreground">
+                  {search ? "검색 결과에 맞는 게시글이 없습니다." : "글이 없습니다."}
+                </p>
                 <Button asChild className="h-11 px-6 font-medium">
-                  <Link href="/posts/new">첫 글 쓰기</Link>
+                  <Link href={search ? "/posts" : "/posts/new"}>
+                    {search ? "전체 글 보기" : "첫 글 쓰기"}
+                  </Link>
                 </Button>
               </CardContent>
             </Card>

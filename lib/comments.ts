@@ -1,78 +1,86 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
+import { createClient } from "@/lib/supabase/server";
 
 export interface Comment {
-  id: number;
-  postId: number;
+  id: string;
+  postId: string;
   author: string;
   content: string;
   date: string;
 }
 
-const dataDir = path.join(process.cwd(), "data");
-const commentsFile = path.join(dataDir, "comments.json");
+export async function getCommentsByPostId(postId: string): Promise<Comment[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("comments")
+    .select(`
+      id,
+      post_id,
+      user_id,
+      content,
+      created_at,
+      profiles (
+        username
+      )
+    `)
+    .eq("post_id", postId)
+    .order("created_at", { ascending: true });
 
-async function ensureCommentsFile() {
-  await fs.mkdir(dataDir, { recursive: true });
-
-  try {
-    await fs.access(commentsFile);
-  } catch {
-    await fs.writeFile(commentsFile, "[]", "utf8");
-  }
-}
-
-async function readComments(): Promise<Comment[]> {
-  await ensureCommentsFile();
-  const raw = await fs.readFile(commentsFile, "utf8");
-
-  try {
-    const parsed = JSON.parse(raw) as Comment[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
+  if (error) {
+    console.error("댓글 조회 실패:", error);
     return [];
   }
+
+  return (data || []).map((item: any) => ({
+    id: item.id,
+    postId: item.post_id,
+    author: item.profiles?.username || "익명",
+    content: item.content,
+    date: new Date(item.created_at).toLocaleDateString("ko-KR"),
+  }));
 }
 
-async function writeComments(comments: Comment[]) {
-  await fs.writeFile(commentsFile, JSON.stringify(comments, null, 2), "utf8");
-}
+export async function createComment(input: { postId: string; content: string }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-export async function getCommentsByPostId(postId: number) {
-  const comments = await readComments();
-  return comments
-    .filter((comment) => comment.postId === postId)
-    .sort((a, b) => a.id - b.id);
-}
-
-export async function createComment(input: { postId: number; author: string; content: string }) {
-  const comments = await readComments();
-  const nextId = comments.length ? Math.max(...comments.map((comment) => comment.id)) + 1 : 1;
-
-  const comment: Comment = {
-    id: nextId,
-    postId: input.postId,
-    author: input.author,
-    content: input.content,
-    date: new Date().toISOString().slice(0, 10),
-  };
-
-  comments.push(comment);
-  await writeComments(comments);
-
-  return comment;
-}
-
-export async function deleteComment(postId: number, commentId: number) {
-  const comments = await readComments();
-  const nextComments = comments.filter(
-    (comment) => !(comment.postId === postId && comment.id === commentId)
-  );
-
-  if (nextComments.length === comments.length) {
-    return false;
+  if (!user) {
+    throw new Error("로그인이 필요합니다.");
   }
 
-  await writeComments(nextComments);
+  const { data, error } = await supabase
+    .from("comments")
+    .insert({
+      post_id: input.postId,
+      user_id: user.id,
+      content: input.content,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error("댓글 작성에 실패했습니다: " + error.message);
+  }
+
+  return data;
+}
+
+export async function deleteComment(postId: string, commentId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("로그인이 필요합니다.");
+  }
+
+  const { error } = await supabase
+    .from("comments")
+    .delete()
+    .eq("id", commentId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    throw new Error("댓글 삭제에 실패했습니다: " + error.message);
+  }
+
   return true;
 }

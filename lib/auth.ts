@@ -1,11 +1,11 @@
 import { createClient } from "@/lib/supabase/client";
 
-export async function signInWithEmail(email: string, password: string) {
+export async function signInWithPassword(email: string, password: string) {
   const supabase = createClient();
   return supabase.auth.signInWithPassword({ email, password });
 }
 
-export async function signUpWithEmail(email: string, password: string, name: string) {
+export async function signUp(email: string, password: string, name: string) {
   const supabase = createClient();
   return supabase.auth.signUp({
     email,
@@ -22,3 +22,4 @@ export async function signOut() {
   const supabase = createClient();
   return supabase.auth.signOut();
 }
+

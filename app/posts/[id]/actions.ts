@@ -9,21 +9,20 @@ function readString(formData: FormData, key: string) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-export async function createCommentAction(postId: number, formData: FormData) {
-  const author = readString(formData, "author") || "익명";
+export async function createCommentAction(postId: string, formData: FormData) {
   const content = readString(formData, "content");
 
   if (!content) {
     throw new Error("댓글 내용을 입력해 주세요.");
   }
 
-  await createComment({ postId, author, content });
+  await createComment({ postId, content });
 
   revalidatePath(`/posts/${postId}`);
   redirect(`/posts/${postId}#comments`);
 }
 
-export async function deleteCommentAction(postId: number, commentId: number) {
+export async function deleteCommentAction(postId: string, commentId: string) {
   await deleteComment(postId, commentId);
 
   revalidatePath(`/posts/${postId}`);

@@ -1,36 +1,134 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, use } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { PostDetailActions } from "@/components/post-detail-actions";
+import { Heart } from "lucide-react";
+import { getUserFriendlyErrorMessage } from "@/lib/error-message";
 
-export default async function PostDetailPage({
+export default function PostDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
-  const supabase = await createClient();
-  const currentUserResult = await supabase.auth.getUser();
-  const { data: post, error } = await supabase
-    .from("posts")
-    .select("id, title, content, created_at, user_id")
-    .eq("id", id)
-    .maybeSingle();
+  const { id } = use(params);
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
 
-  if (error) {
-    console.error(`게시글 ${id} 상세를 불러오지 못했습니다.`, error);
-    throw new Error("게시글 상세를 불러오지 못했습니다.");
+  const [post, setPost] = useState<any | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [errorMsg, setErrorMsg] = useState<string>("");
+  const [likesCount, setLikesCount] = useState<number>(0);
+  const [isLiking, setIsLiking] = useState<boolean>(false);
+
+  useEffect(() => {
+    async function fetchPost() {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("posts")
+          .select("id, title, content, created_at, user_id, likes_count")
+          .eq("id", id)
+          .maybeSingle();
+
+        if (error) {
+          console.error("게시글 상세 조회 실패:", error);
+          setErrorMsg("게시글 상세를 불러오지 못했습니다.");
+          return;
+        }
+
+        if (!data) {
+          setErrorMsg("존재하지 않는 게시글입니다.");
+          return;
+        }
+
+        setPost(data);
+        setLikesCount(data.likes_count ?? 0);
+      } catch (err) {
+        console.error("예외 발생:", err);
+        setErrorMsg("게시글 상세를 불러오지 못했습니다.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchPost();
+  }, [id]);
+
+  async function handleLike() {
+    if (!user) {
+      alert("로그인한 사용자만 좋아요를 누를 수 있습니다.");
+      router.push("/login");
+      return;
+    }
+
+    if (isLiking || !post) return;
+    setIsLiking(true);
+
+    try {
+      const nextLikesCount = likesCount + 1;
+      const supabase = createClient();
+
+      const { error } = await supabase
+        .from("posts")
+        .update({ likes_count: nextLikesCount })
+        .eq("id", post.id);
+
+      if (error) {
+        console.error("좋아요 반영 실패:", error);
+        alert(getUserFriendlyErrorMessage(error));
+        return;
+      }
+
+      setLikesCount(nextLikesCount);
+    } catch (err) {
+      console.error("좋아요 중 예외 발생:", err);
+    } finally {
+      setIsLiking(false);
+    }
   }
 
-  if (!post) {
-    notFound();
+  if (loading || authLoading) {
+    return (
+      <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between gap-3">
+            <div className="h-10 w-36 animate-pulse rounded-full bg-muted" />
+            <div className="h-4 w-32 animate-pulse rounded-full bg-muted" />
+          </div>
+
+          <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+            <div className="px-5 py-7 text-center sm:px-8 sm:py-10">
+              <div className="mx-auto max-w-2xl space-y-4">
+                <div className="h-4 w-full animate-pulse rounded-full bg-muted" />
+                <div className="h-4 w-11/12 animate-pulse rounded-full bg-muted" />
+                <div className="h-4 w-10/12 animate-pulse rounded-full bg-muted" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  // 이 UI 분기(canManagePost)는 단순히 사용자 편의를 위한 버튼 노출 제어용입니다.
-  // 실제 수정 및 삭제 동작에 대한 강력한 보안 통제는 데이터베이스 레벨의 Ch11 RLS 정책이 담당합니다.
-  const currentUserId = currentUserResult.data.user?.id ?? null;
+  if (errorMsg || !post) {
+    return (
+      <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+        <Card className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+          <CardContent className="px-6 py-10 text-center text-sm text-muted-foreground">
+            {errorMsg || "게시글을 찾을 수 없습니다."}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const currentUserId = user?.id ?? null;
   const canManagePost = currentUserId === post.user_id;
 
   return (
@@ -66,6 +164,23 @@ export default async function PostDetailPage({
               {post.content}
             </div>
 
+            {/* 좋아요(추천) 버튼 추가 */}
+            <div className="mt-12 flex justify-center border-t border-border/70 pt-6">
+              <Button
+                type="button"
+                onClick={handleLike}
+                disabled={isLiking}
+                variant="outline"
+                size="lg"
+                className="h-12 gap-2 rounded-full px-6 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all active:scale-95"
+              >
+                <Heart className={`h-5 w-5 ${likesCount > 0 ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
+                <span className="font-semibold text-sm">좋아요</span>
+                <span className="ml-1 rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground font-bold">
+                  {likesCount}
+                </span>
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

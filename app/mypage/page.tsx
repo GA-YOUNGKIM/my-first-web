@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { getPosts } from "@/lib/post-repository";
-import { getCurrentUser } from "@/lib/supabase/server";
+import { getCurrentUser, createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { redirect } from "next/navigation";
@@ -13,8 +12,22 @@ export default async function MyPage() {
   }
 
   const profileEmail = user.email || "사용자";
-  const posts = await getPosts();
-  const myPosts = posts.filter((post) => post.author === profileEmail);
+
+  const supabase = await createClient();
+  const { data: myPosts, error } = await supabase
+    .from("posts")
+    .select("id, title, content, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("내가 쓴 글 목록을 불러오지 못했습니다.", error);
+  }
+
+  const activePosts = myPosts || [];
+  const recentDate = activePosts.length > 0
+    ? new Date(activePosts[0].created_at).toLocaleDateString("ko-KR")
+    : "-";
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
@@ -49,12 +62,12 @@ export default async function MyPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-2xl border border-border bg-background px-4 py-3">
                   <p className="text-xs text-muted-foreground">총 글 수</p>
-                  <p className="mt-1 text-2xl font-semibold text-foreground">{myPosts.length}</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">{activePosts.length}</p>
                 </div>
                 <div className="rounded-2xl border border-border bg-background px-4 py-3">
                   <p className="text-xs text-muted-foreground">최근 활동</p>
                   <p className="mt-1 text-2xl font-semibold text-foreground">
-                    {myPosts[0]?.date ?? "-"}
+                    {recentDate}
                   </p>
                 </div>
               </div>
@@ -74,8 +87,8 @@ export default async function MyPage() {
               <CardTitle className="text-xl text-foreground">내가 쓴 글</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 pt-6">
-              {myPosts.length > 0 ? (
-                myPosts.map((post) => (
+              {activePosts.length > 0 ? (
+                activePosts.map((post) => (
                   <Link
                     key={post.id}
                     href={`/posts/${post.id}`}
@@ -86,8 +99,8 @@ export default async function MyPage() {
                         <p className="text-base font-semibold text-foreground">{post.title}</p>
                         <p className="text-sm text-muted-foreground line-clamp-2">{post.content}</p>
                       </div>
-                      <time className="text-xs text-muted-foreground" dateTime={post.date}>
-                        {post.date}
+                      <time className="text-xs text-muted-foreground" dateTime={post.created_at}>
+                        {new Date(post.created_at).toLocaleDateString("ko-KR")}
                       </time>
                     </div>
                   </Link>

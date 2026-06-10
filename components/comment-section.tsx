@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Comment } from "@/lib/comments";
 
 interface CommentSectionProps {
-  postId: number;
+  postId: string;
   comments: Comment[];
 }
 

@@ -16,6 +16,8 @@ export default function NewPostPage() {
   const { user, loading } = useAuth();
   const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string>("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  
   const [titleError, setTitleError] = useState<string>("");
   const [contentError, setContentError] = useState<string>("");
   const [formError, setFormError] = useState<string>("");
@@ -55,6 +57,14 @@ export default function NewPostPage() {
     }
   }, [loading, router, user]);
 
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.files && e.target.files.length > 0) {
+      setImageFile(e.target.files[0]);
+    } else {
+      setImageFile(null);
+    }
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     setFormError("");
@@ -82,12 +92,40 @@ export default function NewPostPage() {
 
     try {
       const supabase = createClient();
+      let imageUrl = "";
+
+      // 이미지가 첨부된 경우 Supabase Storage에 업로드 후 URL 추출
+      if (imageFile) {
+        const fileExt = imageFile.name.split(".").pop();
+        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+        const filePath = `post-images/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("images")
+          .upload(filePath, imageFile);
+
+        if (uploadError) {
+          console.error("이미지 업로드 실패:", uploadError);
+          setFormError("이미지 업로드에 실패했습니다. 다시 시도해 주세요.");
+          setIsSubmitting(false);
+          return;
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from("images")
+          .getPublicUrl(filePath);
+
+        imageUrl = publicUrlData.publicUrl;
+      }
+
+      // 게시글 insert (image_url 포함)
       const { data, error } = await supabase
         .from("posts")
         .insert({
           title: trimmedTitle,
           content: trimmedContent,
           user_id: user.id,
+          image_url: imageUrl || null,
         })
         .select("id")
         .single();
@@ -175,6 +213,21 @@ export default function NewPostPage() {
                   {titleError}
                 </p>
               ) : null}
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="image" className="block text-sm font-medium text-foreground">
+                대표 이미지 첨부
+              </label>
+              <Input
+                type="file"
+                id="image"
+                name="image"
+                accept="image/*"
+                onChange={handleFileChange}
+                disabled={isSubmitting}
+                className="h-11 rounded-xl px-4 py-2 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+              />
             </div>
 
             <div className="space-y-2">

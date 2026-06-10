@@ -3,16 +3,16 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
-  signInWithEmail as signInWithEmailHelper,
-  signUpWithEmail as signUpWithEmailHelper,
+  signInWithPassword as signInWithPasswordHelper,
+  signUp as signUpHelper,
   signOut as signOutHelper,
 } from "@/lib/auth";
 
 interface AuthContextValue {
   user: any | null;
   loading: boolean;
-  signInWithEmail: (email: string, password: string) => Promise<{ data: any; error: any }>;
-  signUpWithEmail: (email: string, password: string, name: string) => Promise<{ data: any; error: any }>;
+  signInWithPassword: (email: string, password: string) => Promise<{ data: any; error: any }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ data: any; error: any }>;
   signOut: () => Promise<any>;
 }
 
@@ -61,12 +61,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  async function signInWithEmail(email: string, password: string) {
-    return signInWithEmailHelper(email, password);
+  async function signInWithPassword(email: string, password: string) {
+    return signInWithPasswordHelper(email, password);
   }
 
-  async function signUpWithEmail(email: string, password: string, name: string) {
-    return signUpWithEmailHelper(email, password, name);
+  async function signUp(email: string, password: string, name: string) {
+    return signUpHelper(email, password, name);
   }
 
   async function handleSignOut() {
@@ -82,8 +82,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         loading,
-        signInWithEmail,
-        signUpWithEmail,
+        signInWithPassword,
+        signUp,
         signOut: handleSignOut,
       }}
     >
@@ -97,3 +97,4 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }
+

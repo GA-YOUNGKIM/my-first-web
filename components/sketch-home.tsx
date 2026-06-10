@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,11 +12,54 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { getPosts } from "@/lib/post-repository";
+import { createClient } from "@/lib/supabase/client";
 
-export async function SketchHome() {
-  const posts = await getPosts();
-  const recentPosts = posts.slice(0, 3);
+export function SketchHome() {
+  const router = useRouter();
+  const [keyword, setKeyword] = useState<string>("");
+  const [recentPosts, setRecentPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    async function fetchRecentPosts() {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("posts")
+          .select("id, title, content, created_at")
+          .order("created_at", { ascending: false })
+          .limit(3);
+
+        if (error) {
+          console.error("최근 게시글 조회 실패:", error);
+          return;
+        }
+
+        setRecentPosts(data || []);
+      } catch (err) {
+        console.error("예외 발생:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchRecentPosts();
+  }, []);
+
+  function handleSearch() {
+    const trimmed = keyword.trim();
+    if (!trimmed) {
+      router.push("/posts");
+    } else {
+      router.push(`/posts?search=${encodeURIComponent(trimmed)}`);
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  }
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
@@ -38,9 +85,16 @@ export async function SketchHome() {
                 <Input
                   type="search"
                   placeholder="제목 또는 내용 검색"
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   className="h-11 rounded-xl bg-background px-4"
                 />
-                <Button size="lg" className="h-11 whitespace-nowrap px-6 font-medium">
+                <Button
+                  onClick={handleSearch}
+                  size="lg"
+                  className="h-11 whitespace-nowrap px-6 font-medium"
+                >
                   검색
                 </Button>
               </div>
@@ -101,7 +155,12 @@ export async function SketchHome() {
                   </div>
 
                   <div className="space-y-3">
-                    {recentPosts.length > 0 ? (
+                    {loading ? (
+                      <div className="space-y-3">
+                        <div className="h-16 w-full animate-pulse rounded-2xl bg-muted" />
+                        <div className="h-16 w-full animate-pulse rounded-2xl bg-muted" />
+                      </div>
+                    ) : recentPosts.length > 0 ? (
                       recentPosts.map((post) => (
                         <Link
                           key={post.id}
