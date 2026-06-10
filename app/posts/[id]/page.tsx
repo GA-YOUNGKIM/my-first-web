@@ -29,11 +29,23 @@ export default function PostDetailPage({
   useEffect(() => {
     async function fetchPost() {
       try {
+        let decodedId = decodeURIComponent(id).trim();
+        decodedId = decodedId.replace(/\/$/, "");
+        
+        const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedId);
+
+        if (!isValidUUID) {
+          console.error("정규식 검증 실패한 ID 값:", decodedId);
+          setErrorMsg("잘못된 형식의 게시글 ID입니다.");
+          setLoading(false);
+          return;
+        }
+
         const supabase = createClient();
         const { data, error } = await supabase
           .from("posts")
           .select("id, title, content, created_at, user_id, likes_count")
-          .eq("id", id)
+          .eq("id", decodedId)
           .maybeSingle();
 
         if (error) {
