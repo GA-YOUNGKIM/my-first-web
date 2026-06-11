@@ -78,7 +78,6 @@ export default function PostDetailPage() {
     }
   }
 
-  // 💡 데이터베이스 컬럼 및 RLS 방어 로직이 적용된 안전한 댓글 작성 함수
   async function handleCommentSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) {
@@ -89,9 +88,6 @@ export default function PostDetailPage() {
 
     try {
       const supabase = createClient();
-
-      // 1순위 시도: 보편적인 핵심 필수 필드(게시글ID, 유저ID, 내용)만 전송
-      // (혹시 테이블에 author_email 필드가 없어 터지는 문제를 방지합니다)
       const { error } = await supabase.from("comments").insert([
         {
           post_id: id,
@@ -101,9 +97,6 @@ export default function PostDetailPage() {
       ]);
 
       if (error) {
-        console.error("1차 댓글 등록 실패 (필드 매칭 또는 RLS 의심):", error);
-
-        // 2순위 대안 시도: 만약 구조상 author_email이 꼭 필요한 테이블 구성이라면 이메일을 포함해 한 번 더 시도
         const { error: retryError } = await supabase.from("comments").insert([
           {
             post_id: id,
@@ -112,7 +105,6 @@ export default function PostDetailPage() {
             author_email: user.email
           },
         ]);
-
         if (retryError) throw retryError;
       }
 
@@ -120,7 +112,6 @@ export default function PostDetailPage() {
       fetchComments();
     } catch (error: any) {
       console.error("최종 댓글 등록 실패 로그:", error);
-      // 알림 창에 상세 메시지를 띄워 사용자가 원인을 정확히 진단하게 돕습니다.
       alert(`댓글 작성에 실패했습니다.\n사유: ${error.message || "권한(RLS) 제한 혹은 테이블 필드 불일치"}`);
     }
   }
@@ -207,23 +198,26 @@ export default function PostDetailPage() {
   const isAuthor = user && post.user_id === user.id;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:py-12">
-      <Button asChild variant="ghost" className="mb-6 -ml-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50">
+    // 💡 px-4 sm:px-6 설정을 통해 모바일 기기 좌우 패딩을 유연하게 조절합니다.
+    <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-12">
+      <Button asChild variant="ghost" className="mb-4 -ml-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50">
         <Link href="/posts" className="flex items-center gap-2">
           <ArrowLeft className="h-4 w-4" />
           <span>목록으로</span>
         </Link>
       </Button>
 
-      <Card className="border-zinc-100 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <CardHeader className="space-y-4 p-6 sm:p-8">
+      {/* 게시글 본문 카드 */}
+      <Card className="border-zinc-100 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 rounded-2xl overflow-hidden">
+        {/* 💡 p-4 sm:p-8 구조로 모바일에서는 패딩을 줄여 본문 공간을 넓힙니다. */}
+        <CardHeader className="space-y-3 p-4 sm:p-8">
           <div className="space-y-2">
-            <CardTitle className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-3xl">
+            <CardTitle className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-3xl break-all">
               {post.title}
             </CardTitle>
 
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-400 dark:text-zinc-500">
-              <span className="font-medium text-zinc-600 dark:text-zinc-400">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-zinc-400 dark:text-zinc-500">
+              <span className="font-medium text-zinc-600 dark:text-zinc-400 truncate max-w-[150px] sm:max-w-none">
                 {post.author_email || "익명 작성자"}
               </span>
               <span className="text-zinc-300 dark:text-zinc-700">•</span>
@@ -238,8 +232,9 @@ export default function PostDetailPage() {
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-6 p-6 pt-0 sm:p-8 sm:pt-0">
-          <div className="whitespace-pre-wrap text-base leading-relaxed text-zinc-700 dark:text-zinc-300 space-y-4">
+        <CardContent className="space-y-6 p-4 pt-0 sm:p-8 sm:pt-0">
+          {/* 💡 break-words와 텍스트 크기 조절로 가독성 확보 */}
+          <div className="whitespace-pre-wrap break-words text-sm sm:text-base leading-relaxed text-zinc-700 dark:text-zinc-300 space-y-4">
             {(() => {
               const imageRegex = /!\[.*?\]\s*\((https?:\/\/[^\s)]+)\)/;
               const match = post.content ? post.content.match(imageRegex) : null;
@@ -250,29 +245,31 @@ export default function PostDetailPage() {
 
                 return (
                   <div className="flex flex-col gap-4">
-                    {cleanContent ? <p className="whitespace-pre-wrap">{cleanContent}</p> : null}
+                    {cleanContent ? <p className="whitespace-pre-wrap break-words">{cleanContent}</p> : null}
+                    {/* 💡 이미지가 모바일 화면 밖으로 탈출하지 않도록 w-full h-auto와 max-h 조절 */}
                     <div className="mt-2 overflow-hidden rounded-xl border border-zinc-100 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
                       <img
                         src={imageUrl}
                         alt="첨부 이미지"
-                        className="w-full h-auto max-h-[600px] object-contain mx-auto"
+                        className="w-full h-auto max-h-[300px] sm:max-h-[600px] object-contain mx-auto"
                       />
                     </div>
                   </div>
                 );
               }
 
-              return <p className="whitespace-pre-wrap">{post.content}</p>;
+              return <p className="whitespace-pre-wrap break-words">{post.content}</p>;
             })()}
           </div>
 
-          <div className="flex items-center justify-between border-t border-zinc-100 pt-6 dark:border-zinc-800">
-            <div className="flex items-center gap-4">
+          {/* 하단 좋아요 & 수정/삭제 버튼 바 */}
+          <div className="flex items-center justify-between border-t border-zinc-100 pt-4 sm:pt-6 dark:border-zinc-800">
+            <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleLikeToggle}
-                className={`flex items-center gap-2 rounded-xl px-3 py-1.5 transition-colors ${isLikedByMe
+                className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 transition-colors ${isLikedByMe
                   ? "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-400"
                   : "text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800"
                   }`}
@@ -283,21 +280,21 @@ export default function PostDetailPage() {
             </div>
 
             {isAuthor && (
-              <div className="flex items-center gap-1.5">
-                <Button asChild variant="ghost" size="sm" className="rounded-xl text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800">
-                  <Link href={`/posts/${id}/edit`} className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
+                <Button asChild variant="ghost" size="sm" className="rounded-xl h-8 px-2 text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800">
+                  <Link href={`/posts/${id}/edit`} className="flex items-center gap-1 text-xs">
                     <Edit className="h-3.5 w-3.5" />
-                    <span>수정</span>
+                    <span className="hidden xs:inline">수정</span>
                   </Link>
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleDeletePost}
-                  className="rounded-xl text-zinc-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+                  className="rounded-xl h-8 px-2 text-xs text-zinc-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                  <span>삭제</span>
+                  <span className="hidden xs:inline">삭제</span>
                 </Button>
               </div>
             )}
@@ -305,38 +302,40 @@ export default function PostDetailPage() {
         </CardContent>
       </Card>
 
-      {/* 댓글 UI 영역 */}
-      <div className="mt-8 space-y-6">
-        <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">댓글 {comments.length}개</h3>
+      {/* 댓글 UI 영역 반응형 최적화 */}
+      <div className="mt-6 sm:mt-8 space-y-4 sm:space-y-6">
+        <h3 className="text-base sm:text-lg font-semibold text-zinc-900 dark:text-zinc-50">댓글 {comments.length}개</h3>
 
-        <form onSubmit={handleCommentSubmit} className="flex gap-2">
+        {/* 💡 모바일에서는 입력창과 버튼이 세로로 배치되거나 자연스럽게 묶이도록 gap 제어 */}
+        <form onSubmit={handleCommentSubmit} className="flex flex-col sm:flex-row gap-2">
           <input
             type="text"
             placeholder={user ? "댓글을 입력하세요..." : "로그인 후 댓글을 작성할 수 있습니다."}
             disabled={!user}
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            className="flex-1 rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50"
+            className="flex-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50"
           />
-          <Button type="submit" disabled={!user || !newComment.trim()} size="sm" className="rounded-xl px-4">
+          <Button type="submit" disabled={!user || !newComment.trim()} size="sm" className="rounded-xl h-9 sm:h-auto px-4 font-medium">
             등록
           </Button>
         </form>
 
-        <div className="space-y-3">
+        {/* 댓글 리스트 카드 반응형 패딩 */}
+        <div className="space-y-2.5">
           {comments.length > 0 ? (
             comments.map((comment) => (
-              <div key={comment.id} className="flex items-start justify-between rounded-xl border border-zinc-100 bg-zinc-50/50 p-4 dark:border-zinc-800/60 dark:bg-zinc-900/50">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-xs text-zinc-400">
-                    <span className="font-medium text-zinc-600 dark:text-zinc-400">{comment.author_email || "익명"}</span>
+              <div key={comment.id} className="flex items-start justify-between rounded-xl border border-zinc-100 bg-zinc-50/50 p-3 sm:p-4 dark:border-zinc-800/60 dark:bg-zinc-900/50 gap-2">
+                <div className="space-y-1 min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] sm:text-xs text-zinc-400">
+                    <span className="font-medium text-zinc-600 dark:text-zinc-400 truncate max-w-[120px] sm:max-w-none">{comment.author_email || "익명"}</span>
                     <span>•</span>
                     <span>{new Date(comment.created_at).toLocaleDateString("ko-KR")}</span>
                   </div>
-                  <p className="text-sm text-zinc-700 dark:text-zinc-300">{comment.content}</p>
+                  <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 break-words leading-relaxed">{comment.content}</p>
                 </div>
                 {user && comment.user_id === user.id && (
-                  <Button variant="ghost" size="icon" onClick={() => handleCommentDelete(comment.id)} className="h-7 w-7 text-zinc-400 hover:text-red-600">
+                  <Button variant="ghost" size="icon" onClick={() => handleCommentDelete(comment.id)} className="h-7 w-7 text-zinc-400 hover:text-red-600 flex-shrink-0">
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 )}
