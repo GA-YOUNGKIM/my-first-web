@@ -8,6 +8,8 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, ArrowLeft, Trash2, Edit } from "lucide-react";
+// 💡 만약 프로젝트 내에 기존 댓글 컴포넌트가 따로 있었다면 아래 주석을 풀거나 경로를 맞춰주세요.
+// import Comments from "@/components/Comments"; 
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -20,9 +22,14 @@ export default function PostDetailPage() {
   const [likesCount, setLikesCount] = useState(0);
   const [isLikedByMe, setIsLikedByMe] = useState(false);
 
+  // 💡 자체 댓글 상태 (만약 하단에 직접 구현하는 방식이었다면 사용됩니다)
+  const [comments, setComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState("");
+
   useEffect(() => {
     if (id) {
       fetchPostDetails();
+      fetchComments(); // 댓글 불러오기 실행
     }
   }, [id, user]);
 
@@ -55,6 +62,65 @@ export default function PostDetailPage() {
       console.error("게시글 로드 실패:", error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  // 💡 댓글 가져오기 함수 복구
+  async function fetchComments() {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("comments")
+        .select("*")
+        .eq("post_id", id)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+      setComments(data || []);
+    } catch (error) {
+      console.error("댓글 로드 실패:", error);
+    }
+  }
+
+  // 💡 댓글 작성 함수 복구
+  async function handleCommentSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+    if (!newComment.trim()) return;
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from("comments").insert([
+        {
+          post_id: id,
+          user_id: user.id,
+          content: newComment.trim(),
+          author_email: user.email // 작성자 이메일 저장
+        },
+      ]);
+
+      if (error) throw error;
+      setNewComment("");
+      fetchComments(); // 댓글 목록 새로고침
+    } catch (error) {
+      console.error("댓글 작성 실패:", error);
+      alert("댓글 작성에 실패했습니다.");
+    }
+  }
+
+  // 💡 댓글 삭제 함수 복구
+  async function handleCommentDelete(commentId: string) {
+    if (!confirm("댓글을 삭제하시겠습니까?")) return;
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from("comments").delete().eq("id", commentId);
+      if (error) throw error;
+      fetchComments();
+    } catch (error) {
+      console.error("댓글 삭제 실패:", error);
     }
   }
 
@@ -163,7 +229,6 @@ export default function PostDetailPage() {
         <CardContent className="space-y-6 p-6 pt-0 sm:p-8 sm:pt-0">
           <div className="whitespace-pre-wrap text-base leading-relaxed text-zinc-700 dark:text-zinc-300 space-y-4">
             {(() => {
-              // 💡 어떤 공백이나 개행이 있어도 캡처하도록 정규식 인덱스 보강
               const imageRegex = /!\[.*?\]\s*\((https?:\/\/[^\s)]+)\)/;
               const match = post.content ? post.content.match(imageRegex) : null;
 
@@ -179,9 +244,6 @@ export default function PostDetailPage() {
                         src={imageUrl}
                         alt="첨부 이미지"
                         className="w-full h-auto max-h-[600px] object-contain mx-auto"
-                        onError={(e) => {
-                          console.error("이미지 로딩 에러:", e);
-                        }}
                       />
                     </div>
                   </div>
@@ -230,6 +292,51 @@ export default function PostDetailPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* 💡 복구된 댓글 UI 영역 */}
+      <div className="mt-8 space-y-6">
+        <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">댓글 {comments.length}개</h3>
+
+        {/* 댓글 작성 폼 */}
+        <form onSubmit={handleCommentSubmit} className="flex gap-2">
+          <input
+            type="text"
+            placeholder={user ? "댓글을 입력하세요..." : "로그인 후 댓글을 작성할 수 있습니다."}
+            disabled={!user}
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            className="flex-1 rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50"
+          />
+          <Button type="submit" disabled={!user || !newComment.trim()} size="sm" className="rounded-xl px-4">
+            등록
+          </Button>
+        </form>
+
+        {/* 댓글 목록 */}
+        <div className="space-y-3">
+          {comments.length > 0 ? (
+            comments.map((comment) => (
+              <div key={comment.id} className="flex items-start justify-between rounded-xl border border-zinc-100 bg-zinc-50/50 p-4 dark:border-zinc-800/60 dark:bg-zinc-900/50">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-xs text-zinc-400">
+                    <span className="font-medium text-zinc-600 dark:text-zinc-400">{comment.author_email || "익명"}</span>
+                    <span>•</span>
+                    <span>{new Date(comment.created_at).toLocaleDateString("ko-KR")}</span>
+                  </div>
+                  <p className="text-sm text-zinc-700 dark:text-zinc-300">{comment.content}</p>
+                </div>
+                {user && comment.user_id === user.id && (
+                  <Button variant="ghost" size="icon" onClick={() => handleCommentDelete(comment.id)} className="h-7 w-7 text-zinc-400 hover:text-red-600">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+            ))
+          ) : (
+            <p className="text-center text-xs text-zinc-400 py-4">첫 댓글을 남겨보세요!</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
