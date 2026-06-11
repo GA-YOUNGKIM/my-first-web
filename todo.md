@@ -83,7 +83,7 @@ Ch10 완료 메모:
 - [x] 다른 계정 우회 테스트 확인 (사용자 B가 사용자 A 글 수정/삭제 차단)
 - [ ] Vercel production URL 수동 검증: 로그인 성공 후 `/posts/new` 작성 흐름 확인 필요
 - [ ] 배포 URL 직접 열람 검증 여부 재확인 (현재 Vercel 로그인 화면으로 이동)
-- [ ] `mypage/page.tsx` 정규식 `/gs` 플래그로 인한 빌드 에러 해결 (ES2017 target 대응)
+- [x] `mypage/page.tsx` 정규식 `/gs` 플래그로 인한 빌드 에러 해결 (ES2022 target 상향 조정으로 완료)
 - [ ] `posts` 테이블에 `author_email` 컬럼 누락으로 인한 작성자 표시 버그 해결
 - [ ] `comments` 및 `likes` 테이블 마이그레이션 파일 추가 및 CLI 반영 검증
 
