@@ -224,8 +224,8 @@ export default function PostDetailPage({
                 variant="outline"
                 size="lg"
                 className={`h-12 gap-2 rounded-full px-6 transition-all active:scale-95 ${isLikedByMe
-                    ? "bg-red-50 dark:bg-red-950/20 text-red-600 border-red-200 dark:border-red-900/50"
-                    : "hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                  ? "bg-red-50 dark:bg-red-950/20 text-red-600 border-red-200 dark:border-red-900/50"
+                  : "hover:bg-zinc-50 dark:hover:bg-zinc-800"
                   }`}
               >
                 <Heart className={`h-5 w-5 transition-transform ${isLikedByMe ? "fill-red-500 text-red-500 scale-110" : "text-zinc-400"}`} />
