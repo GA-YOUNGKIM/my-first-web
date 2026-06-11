@@ -161,35 +161,34 @@ export default function PostDetailPage() {
         </CardHeader>
 
         <CardContent className="space-y-6 p-6 pt-0 sm:p-8 sm:pt-0">
-          {/* 💡 이미지 문법 텍스트 파싱을 위한 실시간 렌더링 블록 교체 완료 */}
           <div className="whitespace-pre-wrap text-base leading-relaxed text-zinc-700 dark:text-zinc-300 space-y-4">
             {(() => {
-              // 본문 내 마크다운 이미지 코드 포맷 매칭 정규식
-              const imageRegex = /!\[.*?\]\((https?:\/\/.*?)\)/;
+              // 💡 어떤 공백이나 개행이 있어도 캡처하도록 정규식 인덱스 보강
+              const imageRegex = /!\[.*?\]\s*\((https?:\/\/[^\s)]+)\)/;
               const match = post.content ? post.content.match(imageRegex) : null;
 
               if (match) {
-                // 문법 구문을 제외한 실제 사용자 글 내용만 추출
                 const cleanContent = post.content.replace(imageRegex, "").trim();
                 const imageUrl = match[1];
 
                 return (
                   <div className="flex flex-col gap-4">
-                    {cleanContent ? <p>{cleanContent}</p> : null}
-                    {/* 브라우저가 직접 이미지를 읽어와서 출력할 수 있도록 안전하게 변환 */}
+                    {cleanContent ? <p className="whitespace-pre-wrap">{cleanContent}</p> : null}
                     <div className="mt-2 overflow-hidden rounded-xl border border-zinc-100 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
                       <img
                         src={imageUrl}
                         alt="첨부 이미지"
-                        className="w-full h-auto max-h-[500px] object-contain mx-auto"
+                        className="w-full h-auto max-h-[600px] object-contain mx-auto"
+                        onError={(e) => {
+                          console.error("이미지 로딩 에러:", e);
+                        }}
                       />
                     </div>
                   </div>
                 );
               }
 
-              // 이미지가 없는 게시글일 경우 기존 텍스트 그대로 노출
-              return <p>{post.content}</p>;
+              return <p className="whitespace-pre-wrap">{post.content}</p>;
             })()}
           </div>
 

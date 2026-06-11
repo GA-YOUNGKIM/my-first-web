@@ -43,7 +43,7 @@ export default async function PostsPage({
               {search ? `"${search}" 검색 결과` : "전체 게시글"}
             </h1>
             <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
-              {search 
+              {search
                 ? `입력하신 검색어에 해당하는 결과를 Supabase DB에서 조회했습니다.`
                 : `최신 글부터 차분하게 읽어보세요. 글이 많아져도 목록이 보기 쉽게 유지됩니다.`
               }
@@ -98,8 +98,12 @@ export default async function PostsPage({
                   </CardHeader>
 
                   <CardContent className="px-5 sm:px-6">
+                    {/* 💡 정규식을 통해 목록 가독성을 해치는 이미지 마크다운 문자열을 필터링 및 청소합니다. */}
                     <p className="line-clamp-4 text-sm leading-7 text-muted-foreground">
-                      {post.content}
+                      {post.content
+                        ? post.content.replace(/!\[.*?\]\s*\((https?:\/\/[^\s)]+)\)/g, "").trim()
+                        : ""
+                      }
                     </p>
                   </CardContent>
 
