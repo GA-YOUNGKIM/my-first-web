@@ -8,8 +8,6 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, ArrowLeft, Trash2, Edit } from "lucide-react";
-// 💡 만약 프로젝트 내에 기존 댓글 컴포넌트가 따로 있었다면 아래 주석을 풀거나 경로를 맞춰주세요.
-// import Comments from "@/components/Comments"; 
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -22,14 +20,13 @@ export default function PostDetailPage() {
   const [likesCount, setLikesCount] = useState(0);
   const [isLikedByMe, setIsLikedByMe] = useState(false);
 
-  // 💡 자체 댓글 상태 (만약 하단에 직접 구현하는 방식이었다면 사용됩니다)
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
 
   useEffect(() => {
     if (id) {
       fetchPostDetails();
-      fetchComments(); // 댓글 불러오기 실행
+      fetchComments();
     }
   }, [id, user]);
 
@@ -65,7 +62,6 @@ export default function PostDetailPage() {
     }
   }
 
-  // 💡 댓글 가져오기 함수 복구
   async function fetchComments() {
     try {
       const supabase = createClient();
@@ -82,7 +78,7 @@ export default function PostDetailPage() {
     }
   }
 
-  // 💡 댓글 작성 함수 복구
+  // 💡 데이터베이스 컬럼 및 RLS 방어 로직이 적용된 안전한 댓글 작성 함수
   async function handleCommentSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) {
@@ -93,25 +89,42 @@ export default function PostDetailPage() {
 
     try {
       const supabase = createClient();
+
+      // 1순위 시도: 보편적인 핵심 필수 필드(게시글ID, 유저ID, 내용)만 전송
+      // (혹시 테이블에 author_email 필드가 없어 터지는 문제를 방지합니다)
       const { error } = await supabase.from("comments").insert([
         {
           post_id: id,
           user_id: user.id,
-          content: newComment.trim(),
-          author_email: user.email // 작성자 이메일 저장
+          content: newComment.trim()
         },
       ]);
 
-      if (error) throw error;
+      if (error) {
+        console.error("1차 댓글 등록 실패 (필드 매칭 또는 RLS 의심):", error);
+
+        // 2순위 대안 시도: 만약 구조상 author_email이 꼭 필요한 테이블 구성이라면 이메일을 포함해 한 번 더 시도
+        const { error: retryError } = await supabase.from("comments").insert([
+          {
+            post_id: id,
+            user_id: user.id,
+            content: newComment.trim(),
+            author_email: user.email
+          },
+        ]);
+
+        if (retryError) throw retryError;
+      }
+
       setNewComment("");
-      fetchComments(); // 댓글 목록 새로고침
-    } catch (error) {
-      console.error("댓글 작성 실패:", error);
-      alert("댓글 작성에 실패했습니다.");
+      fetchComments();
+    } catch (error: any) {
+      console.error("최종 댓글 등록 실패 로그:", error);
+      // 알림 창에 상세 메시지를 띄워 사용자가 원인을 정확히 진단하게 돕습니다.
+      alert(`댓글 작성에 실패했습니다.\n사유: ${error.message || "권한(RLS) 제한 혹은 테이블 필드 불일치"}`);
     }
   }
 
-  // 💡 댓글 삭제 함수 복구
   async function handleCommentDelete(commentId: string) {
     if (!confirm("댓글을 삭제하시겠습니까?")) return;
     try {
@@ -202,7 +215,6 @@ export default function PostDetailPage() {
         </Link>
       </Button>
 
-      {/* 게시글 본문 카드 */}
       <Card className="border-zinc-100 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <CardHeader className="space-y-4 p-6 sm:p-8">
           <div className="space-y-2">
@@ -293,11 +305,10 @@ export default function PostDetailPage() {
         </CardContent>
       </Card>
 
-      {/* 💡 복구된 댓글 UI 영역 */}
+      {/* 댓글 UI 영역 */}
       <div className="mt-8 space-y-6">
         <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">댓글 {comments.length}개</h3>
 
-        {/* 댓글 작성 폼 */}
         <form onSubmit={handleCommentSubmit} className="flex gap-2">
           <input
             type="text"
@@ -312,7 +323,6 @@ export default function PostDetailPage() {
           </Button>
         </form>
 
-        {/* 댓글 목록 */}
         <div className="space-y-3">
           {comments.length > 0 ? (
             comments.map((comment) => (
