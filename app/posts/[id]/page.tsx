@@ -20,6 +20,7 @@ export default function PostDetailPage() {
   const [likesCount, setLikesCount] = useState(0);
   const [isLikedByMe, setIsLikedByMe] = useState(false);
 
+  // 💡 초기값을 확실하게 빈 배열([])로 고정해 둡니다.
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
 
@@ -75,6 +76,8 @@ export default function PostDetailPage() {
       setComments(data || []);
     } catch (error) {
       console.error("댓글 로드 실패:", error);
+      // 💡 에러가 나더라도 다음 컴포넌트가 뻗지 않도록 강제로 빈 배열을 먹여 줍니다.
+      setComments([]);
     }
   }
 
@@ -198,7 +201,6 @@ export default function PostDetailPage() {
   const isAuthor = user && post.user_id === user.id;
 
   return (
-    // 💡 px-4 sm:px-6 설정을 통해 모바일 기기 좌우 패딩을 유연하게 조절합니다.
     <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-12">
       <Button asChild variant="ghost" className="mb-4 -ml-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50">
         <Link href="/posts" className="flex items-center gap-2">
@@ -209,7 +211,6 @@ export default function PostDetailPage() {
 
       {/* 게시글 본문 카드 */}
       <Card className="border-zinc-100 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 rounded-2xl overflow-hidden">
-        {/* 💡 p-4 sm:p-8 구조로 모바일에서는 패딩을 줄여 본문 공간을 넓힙니다. */}
         <CardHeader className="space-y-3 p-4 sm:p-8">
           <div className="space-y-2">
             <CardTitle className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-3xl break-all">
@@ -233,7 +234,6 @@ export default function PostDetailPage() {
         </CardHeader>
 
         <CardContent className="space-y-6 p-4 pt-0 sm:p-8 sm:pt-0">
-          {/* 💡 break-words와 텍스트 크기 조절로 가독성 확보 */}
           <div className="whitespace-pre-wrap break-words text-sm sm:text-base leading-relaxed text-zinc-700 dark:text-zinc-300 space-y-4">
             {(() => {
               const imageRegex = /!\[.*?\]\s*\((https?:\/\/[^\s)]+)\)/;
@@ -246,7 +246,6 @@ export default function PostDetailPage() {
                 return (
                   <div className="flex flex-col gap-4">
                     {cleanContent ? <p className="whitespace-pre-wrap break-words">{cleanContent}</p> : null}
-                    {/* 💡 이미지가 모바일 화면 밖으로 탈출하지 않도록 w-full h-auto와 max-h 조절 */}
                     <div className="mt-2 overflow-hidden rounded-xl border border-zinc-100 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
                       <img
                         src={imageUrl}
@@ -304,9 +303,9 @@ export default function PostDetailPage() {
 
       {/* 댓글 UI 영역 반응형 최적화 */}
       <div className="mt-6 sm:mt-8 space-y-4 sm:space-y-6">
-        <h3 className="text-base sm:text-lg font-semibold text-zinc-900 dark:text-zinc-50">댓글 {comments.length}개</h3>
+        {/* 💡 안전 가드 보강: comments가 유효하지 않을 때 런타임 다운 방지 */}
+        <h3 className="text-base sm:text-lg font-semibold text-zinc-900 dark:text-zinc-50">댓글 {(comments || []).length}개</h3>
 
-        {/* 💡 모바일에서는 입력창과 버튼이 세로로 배치되거나 자연스럽게 묶이도록 gap 제어 */}
         <form onSubmit={handleCommentSubmit} className="flex flex-col sm:flex-row gap-2">
           <input
             type="text"
@@ -321,9 +320,10 @@ export default function PostDetailPage() {
           </Button>
         </form>
 
-        {/* 댓글 리스트 카드 반응형 패딩 */}
+        {/* 댓글 리스트 카드 */}
         <div className="space-y-2.5">
-          {comments.length > 0 ? (
+          {/* 💡 안전 가드 보강: 데이터 꼬임 현상 전면 차단 */}
+          {(comments || []).length > 0 ? (
             comments.map((comment) => (
               <div key={comment.id} className="flex items-start justify-between rounded-xl border border-zinc-100 bg-zinc-50/50 p-3 sm:p-4 dark:border-zinc-800/60 dark:bg-zinc-900/50 gap-2">
                 <div className="space-y-1 min-w-0 flex-1">
