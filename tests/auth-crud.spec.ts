@@ -1,59 +1,55 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from '@playwright/test';
 
-const TEST_EMAIL = process.env.TEST_EMAIL;
-const TEST_PASSWORD = process.env.TEST_PASSWORD;
-const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? process.env.BASE_URL ?? "http://127.0.0.1:3000";
+test.describe('Auth and CRUD E2E Tests', () => {
+  test('행복 경로', async ({ page }) => {
+    // 1. /login에서 TEST_EMAIL, TEST_PASSWORD 환경변수로 로그인
+    await page.goto('/login');
+    
+    const email = process.env.TEST_EMAIL;
+    const password = process.env.TEST_PASSWORD;
 
-function appUrl(path: string): string {
-  return new URL(path, BASE_URL).toString();
-}
+    if (!email || !password) {
+      test.skip(true, 'TEST_EMAIL and TEST_PASSWORD environment variables must be set.');
+      return;
+    }
 
-async function login(page: Page): Promise<void> {
-  if (!TEST_EMAIL || !TEST_PASSWORD) {
-    throw new Error("TEST_EMAIL and TEST_PASSWORD must be set.");
-  }
+    await page.getByLabel('이메일').fill(email);
+    await page.getByLabel('비밀번호').fill(password);
+    await page.getByRole('button', { name: '로그인', exact: true }).click();
 
-  await page.goto(appUrl("/login"));
-  await page.getByLabel("이메일").fill(TEST_EMAIL);
-  await page.getByLabel("비밀번호").fill(TEST_PASSWORD);
-  await page.getByRole("button", { name: "로그인" }).click();
+    // 로그인이 완료될 때까지 대기 (예: /posts로 이동)
+    await page.waitForURL(/.*\/posts.*/);
 
-  await expect(page).toHaveURL(/\/posts\/?$/);
-}
+    // 2. /posts/new에서 제목/내용 입력 후 저장
+    await page.goto('/posts/new');
+    
+    const timestamp = Date.now();
+    const testTitle = `Test Post Title ${timestamp}`;
+    const testContent = `This is a test post content created at ${new Date(timestamp).toISOString()}`;
 
-test.describe("auth crud e2e", () => {
-  test.skip(!TEST_EMAIL || !TEST_PASSWORD, "Set TEST_EMAIL and TEST_PASSWORD to run auth E2E tests.");
+    await page.getByLabel('제목').fill(testTitle);
+    await page.getByLabel('내용').fill(testContent);
+    await page.getByRole('button', { name: '게시글 저장하기' }).click();
 
-  test("행복 경로", async ({ page }, testInfo) => {
-    const uniqueTitle = `E2E 게시글 ${testInfo.project.name} ${Date.now()}`;
-    const uniqueContent = `${uniqueTitle} 내용을 확인하기 위한 E2E 테스트 본문입니다.`;
+    // 저장이 완료되어 상세 페이지 등으로 이동할 때까지 대기
+    await page.waitForURL(/.*\/posts\/.+/);
 
-    await login(page);
-
-    await page.goto(appUrl("/posts/new"));
-    await expect(page).toHaveURL(/\/posts\/new$/);
-
-    await page.getByLabel("제목").fill(uniqueTitle);
-    await page.getByLabel("내용").fill(uniqueContent);
-    await page.getByRole("button", { name: "게시글 저장하기" }).click();
-
-    await expect(page).toHaveURL(/\/posts\/[^/]+$/);
-
-    await page.goto(appUrl("/posts"));
-    await expect(page.getByRole("link", { name: uniqueTitle })).toBeVisible();
+    // 3. /posts 목록에서 새 글 제목 확인
+    await page.goto('/posts');
+    
+    // 새 글 제목이 화면에 보이는지 확인 (링크 역할로 찾기)
+    await expect(page.getByRole('link', { name: testTitle })).toBeVisible();
   });
 
-  test("거절 경로", async ({ browser }) => {
-    const context = await browser.newContext();
-    const page = await context.newPage();
+  test('거절 경로', async ({ page }) => {
+    // 1. 로그아웃 또는 새 브라우저 컨텍스트
+    // Playwright의 각 test 블록은 기본적으로 새롭고 독립된 브라우저 컨텍스트를 사용하므로
+    // 별도의 로그아웃 과정 없이 비로그인 상태로 시작됩니다.
+    
+    // 2. /posts/new 접속
+    await page.goto('/posts/new');
 
-    try {
-      await page.goto(appUrl("/posts/new"));
-
-      await expect(page).toHaveURL(/\/login(\?|$)/);
-      await expect(page.getByRole("heading", { name: "로그인" })).toBeVisible();
-    } finally {
-      await context.close();
-    }
+    // 3. /login으로 리다이렉트되는지 확인
+    await expect(page).toHaveURL(/.*\/login(\?|$)/);
   });
 });

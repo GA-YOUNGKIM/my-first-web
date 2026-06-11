@@ -18,7 +18,7 @@ function HeaderNavigation() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // 초기 렌더링 때 다크모드 상태가 안전하게 동기화되도록 보장하는 로직 (핵심!)
+  // 초기 렌더링 때 다크모드 상태가 안전하게 동기화되도록 보장하는 로직
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -50,8 +50,8 @@ function HeaderNavigation() {
             게시글 목록
           </Link>
 
-          {/* 로그인 세션 분기 */}
-          {user ? (
+          {/* 💡 [보안 강화] user 객체와 user.id가 명확히 존재할 때만 로그인 세션 표시 */}
+          {user && user.id ? (
             <>
               <Link href="/mypage" className="flex items-center gap-1 rounded-xl px-2.5 py-1.5 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-50">
                 <User className="h-4 w-4 text-zinc-400" />
@@ -72,7 +72,7 @@ function HeaderNavigation() {
               </button>
 
               <span className="ml-1 hidden border-l border-zinc-200 dark:border-zinc-700 pl-3 text-xs text-blue-600 dark:text-blue-400 font-semibold md:inline">
-                {user.email}
+                {user.email || ""}
               </span>
             </>
           ) : (
@@ -80,7 +80,8 @@ function HeaderNavigation() {
               <Link href="/login" className="rounded-xl px-3 py-1.5 text-zinc-900 dark:text-zinc-50 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800">
                 로그인
               </Link>
-              <Link href="/register" className="rounded-xl bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-950 transition-all hover:bg-zinc-800 dark:hover:bg-zinc-200">
+              {/* 💡 [주소 교정] 404 에러 방지를 위해 /register에서 실제 폴더인 /signup으로 주소 매핑 변경 */}
+              <Link href="/signup" className="rounded-xl bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-950 transition-all hover:bg-zinc-800 dark:hover:bg-zinc-200">
                 회원가입
               </Link>
             </>
