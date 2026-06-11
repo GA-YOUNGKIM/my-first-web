@@ -30,83 +30,103 @@ export default async function MyPage() {
     : "-";
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
+    <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:py-12">
       <section className="space-y-6">
-        <div className="space-y-3">
+        <div className="space-y-2">
           <p className="text-xs font-semibold tracking-[0.24em] text-muted-foreground uppercase">
             my page
           </p>
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-4xl">
             내 블로그 현황
           </h1>
-          <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
+          <p className="max-w-2xl text-xs sm:text-sm leading-6 text-muted-foreground">
             작성자 프로필과 내가 쓴 글을 한 번에 볼 수 있는 개인 관리 공간입니다.
           </p>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
-          <Card className="rounded-3xl border border-border bg-card shadow-sm">
+        {/* 💡 lg:grid-cols-[320px_1fr] 구성을 유지하여 데스크톱에선 좌우 배치, 모바일에선 위아래로 깔끔하게 떨어집니다. */}
+        <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+
+          {/* 프로필 카드 섹션 */}
+          <Card className="rounded-3xl border border-border bg-card shadow-sm h-fit">
             <CardHeader className="border-b border-border/70 pb-4">
-              <CardTitle className="text-xl text-foreground">프로필</CardTitle>
+              <CardTitle className="text-lg font-bold text-foreground">프로필</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-6">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-2xl font-semibold text-foreground">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-xl font-bold text-foreground">
                 {profileEmail[0]?.toUpperCase() ?? "U"}
               </div>
-              <div className="space-y-2">
-                <p className="text-lg font-semibold text-foreground">{profileEmail}</p>
-                <p className="text-sm leading-7 text-muted-foreground">
+              <div className="space-y-1">
+                {/* 💡 모바일 뷰포트에서 긴 이메일 주소가 영역 밖으로 튀어나가지 않도록 break-all 처리 */}
+                <p className="text-base font-bold text-foreground break-all">{profileEmail}</p>
+                <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground">
                   Supabase 인증 사용자입니다. 안전하게 블로그를 작성하고 관리할 수 있습니다.
                 </p>
               </div>
+
+              {/* 통계 격자 구조 모바일 텍스트 축소 적용 */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-2xl border border-border bg-background px-4 py-3">
-                  <p className="text-xs text-muted-foreground">총 글 수</p>
-                  <p className="mt-1 text-2xl font-semibold text-foreground">{activePosts.length}</p>
+                <div className="rounded-2xl border border-border bg-background px-3 py-2.5 sm:px-4 sm:py-3">
+                  <p className="text-[11px] text-muted-foreground">총 글 수</p>
+                  <p className="mt-0.5 text-xl font-bold text-foreground">{activePosts.length}</p>
                 </div>
-                <div className="rounded-2xl border border-border bg-background px-4 py-3">
-                  <p className="text-xs text-muted-foreground">최근 활동</p>
-                  <p className="mt-1 text-2xl font-semibold text-foreground">
+                <div className="rounded-2xl border border-border bg-background px-3 py-2.5 sm:px-4 sm:py-3">
+                  <p className="text-[11px] text-muted-foreground">최근 활동</p>
+                  <p className="mt-1 text-sm font-bold text-foreground truncate">
                     {recentDate}
                   </p>
                 </div>
               </div>
-              <div className="flex flex-col gap-3 pt-2">
-                <Button asChild className="h-11 px-6 font-medium">
+
+              <div className="flex flex-col gap-2 pt-2">
+                <Button asChild size="sm" className="h-10 px-6 font-medium rounded-xl">
                   <Link href="/posts/new">새 글 쓰기</Link>
                 </Button>
-                <Button asChild variant="outline" className="h-11 px-6 font-medium">
+                <Button asChild variant="outline" size="sm" className="h-10 px-6 font-medium rounded-xl">
                   <Link href="/posts">전체 글 보기</Link>
                 </Button>
               </div>
             </CardContent>
           </Card>
 
+          {/* 내가 쓴 글 목록 섹션 */}
           <Card className="rounded-3xl border border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/70 pb-4">
-              <CardTitle className="text-xl text-foreground">내가 쓴 글</CardTitle>
+              <CardTitle className="text-lg font-bold text-foreground">내가 쓴 글</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 pt-6">
+            <CardContent className="space-y-3 pt-6 px-4 sm:px-6">
               {activePosts.length > 0 ? (
-                activePosts.map((post) => (
-                  <Link
-                    key={post.id}
-                    href={`/posts/${post.id}`}
-                    className="block rounded-2xl border border-border bg-background px-4 py-4 transition-colors hover:border-primary/30 hover:bg-primary/5"
-                  >
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="space-y-1">
-                        <p className="text-base font-semibold text-foreground">{post.title}</p>
-                        <p className="text-sm text-muted-foreground line-clamp-2">{post.content}</p>
+                activePosts.map((post) => {
+                  // 💡 마크다운 이미지 태그 정규식 매칭 분석 및 청소
+                  const imageRegex = /!\[.*?\]\s*\((https?:\/\/[^\s)]+)\)/g;
+                  const cleanContent = post.content ? post.content.replace(imageRegex, "").trim() : "";
+
+                  return (
+                    <Link
+                      key={post.id}
+                      href={`/posts/${post.id}`}
+                      className="block rounded-2xl border border-border bg-background p-4 transition-all hover:border-primary/30 hover:bg-primary/5 group"
+                    >
+                      {/* 💡 모바일에서는 세로로, 가로가 넓어지면 양옆 배치로 유연하게 늘어나는 flex 구조 */}
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="space-y-1 flex-1 min-w-0">
+                          <p className="text-sm sm:text-base font-bold text-foreground group-hover:text-primary transition-colors break-all truncate">
+                            {post.title}
+                          </p>
+                          {/* 💡 정규식으로 걸러진 텍스트만 깔끔하게 노출 */}
+                          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 break-all leading-relaxed">
+                            {cleanContent || "사진이 포함된 게시글입니다. 상세 보기에서 확인하세요."}
+                          </p>
+                        </div>
+                        <time className="text-[10px] sm:text-xs text-muted-foreground/80 whitespace-nowrap self-start sm:self-auto sm:pt-1" dateTime={post.created_at}>
+                          {new Date(post.created_at).toLocaleDateString("ko-KR")}
+                        </time>
                       </div>
-                      <time className="text-xs text-muted-foreground" dateTime={post.created_at}>
-                        {new Date(post.created_at).toLocaleDateString("ko-KR")}
-                      </time>
-                    </div>
-                  </Link>
-                ))
+                    </Link>
+                  );
+                })
               ) : (
-                <div className="rounded-2xl border border-dashed border-border bg-background px-4 py-8 text-center text-sm text-muted-foreground">
+                <div className="rounded-2xl border border-dashed border-border bg-background px-4 py-12 text-center text-xs text-muted-foreground">
                   아직 내 이름으로 작성된 글이 없어요.
                 </div>
               )}
