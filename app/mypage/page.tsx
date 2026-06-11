@@ -44,10 +44,7 @@ export default async function MyPage() {
           </p>
         </div>
 
-        {/* 💡 lg:grid-cols-[320px_1fr] 구성을 유지하여 데스크톱에선 좌우 배치, 모바일에선 위아래로 깔끔하게 떨어집니다. */}
         <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-
-          {/* 프로필 카드 섹션 */}
           <Card className="rounded-3xl border border-border bg-card shadow-sm h-fit">
             <CardHeader className="border-b border-border/70 pb-4">
               <CardTitle className="text-lg font-bold text-foreground">프로필</CardTitle>
@@ -57,14 +54,11 @@ export default async function MyPage() {
                 {profileEmail[0]?.toUpperCase() ?? "U"}
               </div>
               <div className="space-y-1">
-                {/* 💡 모바일 뷰포트에서 긴 이메일 주소가 영역 밖으로 튀어나가지 않도록 break-all 처리 */}
                 <p className="text-base font-bold text-foreground break-all">{profileEmail}</p>
                 <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground">
                   Supabase 인증 사용자입니다. 안전하게 블로그를 작성하고 관리할 수 있습니다.
                 </p>
               </div>
-
-              {/* 통계 격자 구조 모바일 텍스트 축소 적용 */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-2xl border border-border bg-background px-3 py-2.5 sm:px-4 sm:py-3">
                   <p className="text-[11px] text-muted-foreground">총 글 수</p>
@@ -77,7 +71,6 @@ export default async function MyPage() {
                   </p>
                 </div>
               </div>
-
               <div className="flex flex-col gap-2 pt-2">
                 <Button asChild size="sm" className="h-10 px-6 font-medium rounded-xl">
                   <Link href="/posts/new">새 글 쓰기</Link>
@@ -89,7 +82,6 @@ export default async function MyPage() {
             </CardContent>
           </Card>
 
-          {/* 내가 쓴 글 목록 섹션 */}
           <Card className="rounded-3xl border border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/70 pb-4">
               <CardTitle className="text-lg font-bold text-foreground">내가 쓴 글</CardTitle>
@@ -97,9 +89,10 @@ export default async function MyPage() {
             <CardContent className="space-y-3 pt-6 px-4 sm:px-6">
               {activePosts.length > 0 ? (
                 activePosts.map((post) => {
-                  // 💡 마크다운 이미지 태그 정규식 매칭 분석 및 청소
-                  const imageRegex = /!\[.*?\]\s*\((https?:\/\/[^\s)]+)\)/g;
-                  const cleanContent = post.content ? post.content.replace(imageRegex, "").trim() : "";
+                  // 💡 강화된 무적의 글로벌 마크다운 이미지 정규식 필터링
+                  const cleanContent = post.content
+                    ? post.content.replace(/!\[.*?\]\s*\(\s*(https?:\/\/[^\s)]+)\s*\)/gs, "").trim()
+                    : "";
 
                   return (
                     <Link
@@ -107,13 +100,11 @@ export default async function MyPage() {
                       href={`/posts/${post.id}`}
                       className="block rounded-2xl border border-border bg-background p-4 transition-all hover:border-primary/30 hover:bg-primary/5 group"
                     >
-                      {/* 💡 모바일에서는 세로로, 가로가 넓어지면 양옆 배치로 유연하게 늘어나는 flex 구조 */}
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                         <div className="space-y-1 flex-1 min-w-0">
                           <p className="text-sm sm:text-base font-bold text-foreground group-hover:text-primary transition-colors break-all truncate">
                             {post.title}
                           </p>
-                          {/* 💡 정규식으로 걸러진 텍스트만 깔끔하게 노출 */}
                           <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 break-all leading-relaxed">
                             {cleanContent || "사진이 포함된 게시글입니다. 상세 보기에서 확인하세요."}
                           </p>

@@ -16,7 +16,6 @@ export default async function PostsPage({
   const { search } = await searchParams;
   const supabase = await createClient();
 
-  // 💡 [안전 조치] 에러를 유발하던 author_email을 빼고 기존에 완벽히 동작하던 필드들만 안전하게 select 합니다.
   let queryBuilder = supabase
     .from("posts")
     .select("id, title, content, created_at, user_id");
@@ -76,10 +75,15 @@ export default async function PostsPage({
           {postList && postList.length > 0 ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {postList.map((post) => {
-                // 본문 텍스트 내 이미지 링크 문자열 추출 및 제거 파싱
-                const imageRegex = /!\[.*?\]\s*\((https?:\/\/[^\s)]+)\)/;
+                // 💡 [무적의 정규식 바꿈] 줄바꿈과 어떠한 공백 문자 패턴도 100% 잡아내는 정규식입니다.
+                const imageRegex = /!\[.*?\]\s*\(\s*(https?:\/\/[^\s)]+)\s*\)/s;
                 const match = post.content ? post.content.match(imageRegex) : null;
-                const cleanContent = post.content ? post.content.replace(imageRegex, "").trim() : "";
+
+                // 본문 텍스트 청소할 때는 글로벌 플래그(g)를 활용해 찌꺼기 주소를 완전히 소멸시킵니다.
+                const cleanContent = post.content
+                  ? post.content.replace(/!\[.*?\]\s*\(\s*(https?:\/\/[^\s)]+)\s*\)/gs, "").trim()
+                  : "";
+
                 const imageUrl = match ? match[1] : null;
 
                 return (
@@ -101,7 +105,6 @@ export default async function PostsPage({
                               {new Date(post.created_at).toLocaleDateString("ko-KR")}
                             </time>
                           </div>
-                          {/* 💡 author_email 대용으로 깔끔하게 익명 처리하거나, 필요시 다른 고유 아이디 사용 */}
                           <span className="text-[11px] text-muted-foreground/80 max-w-[120px] truncate">
                             작성글
                           </span>
@@ -115,7 +118,7 @@ export default async function PostsPage({
                       <CardContent className="px-4 sm:px-6 space-y-3">
                         <div className="flex flex-col sm:flex-row gap-3 items-start">
 
-                          {/* 썸네일 뷰포트 반응형 처리 */}
+                          {/* 💡 어떤 가로세로 비율이든 뚫고 나가지 않는 모바일/데스크톱 철벽 방어 썸네일 틀 */}
                           {imageUrl && (
                             <div className="w-full sm:w-24 sm:h-24 h-36 flex-shrink-0 overflow-hidden rounded-xl border border-border bg-muted/30">
                               <img
@@ -128,7 +131,7 @@ export default async function PostsPage({
 
                           {/* 텍스트 내용 */}
                           <p className="line-clamp-3 text-xs sm:text-sm leading-relaxed text-muted-foreground break-all flex-1">
-                            {cleanContent || "내용이 포함된 스토리입니다. 자세한 내용을 읽어보세요."}
+                            {cleanContent || "사진이 포함된 스토리입니다. 자세한 내용을 읽어보세요."}
                           </p>
                         </div>
                       </CardContent>

@@ -1,52 +1,65 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, chromium } from '@playwright/test';
 
-test.describe('Auth and Post CRUD', () => {
-  test('Happy Path: 로그인, 새 글 작성 후 목록에서 확인', async ({ page }) => {
+const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
+
+test.describe('인증 및 게시글 CRUD', () => {
+  test('성공 경로: 로그인 → 새 글 작성 → 목록에서 확인', async ({ page }) => {
     const email = process.env.TEST_EMAIL;
     const password = process.env.TEST_PASSWORD;
 
     if (!email || !password) {
-      test.skip(true, 'TEST_EMAIL or TEST_PASSWORD environment variables are not set');
+      test.skip(true, 'TEST_EMAIL 또는 TEST_PASSWORD 환경변수가 설정되지 않았습니다.');
       return;
     }
 
-    // 1. /login에서 TEST_EMAIL, TEST_PASSWORD 환경변수로 로그인
-    await page.goto('/login');
-    
+    // 1. /login 이동 후 로그인
+    await page.goto(`${BASE_URL}/login`);
+    await expect(page).toHaveURL(/\/login/);
+
     await page.getByLabel('이메일').fill(email);
     await page.getByLabel('비밀번호').fill(password);
     await page.getByRole('button', { name: '로그인' }).click();
 
-    // 로그인 완료 후 /posts 로 리다이렉트 되는 것을 기다림 (안정성 확보)
-    await expect(page).toHaveURL(/.*\/posts/);
+    // 로그인 성공 → /posts 리다이렉트 대기
+    await page.waitForURL(/\/posts$/, { timeout: 10_000 });
+    await expect(page).toHaveURL(/\/posts$/);
 
-    // 2. /posts/new에서 제목/내용 입력 후 저장
-    await page.goto('/posts/new');
+    // 2. /posts/new 이동 → 제목/내용 입력 후 저장
+    await page.goto(`${BASE_URL}/posts/new`);
+    await expect(page).toHaveURL(/\/posts\/new/);
 
-    const testTitle = `테스트 제목 ${Date.now()}`;
-    const testContent = `이것은 Playwright E2E 테스트를 통해 작성된 내용입니다.\n테스트 시간: ${new Date().toISOString()}`;
+    const uniqueTitle = `E2E 테스트 글 ${Date.now()}`;
+    const testContent = 'Playwright E2E 테스트로 작성된 내용입니다. 자동화 검증 중입니다.';
 
-    await page.getByLabel('제목').fill(testTitle);
+    await page.getByLabel('제목').fill(uniqueTitle);
     await page.getByLabel('내용').fill(testContent);
+
     await page.getByRole('button', { name: '게시글 저장하기' }).click();
 
-    // 글 저장 후 상세 페이지(/posts/[id])로 리다이렉트 됨
-    await expect(page).toHaveURL(/.*\/posts\/.+/);
+    // 저장 후 상세 페이지로 이동 대기
+    await page.waitForURL(/\/posts\/.+/, { timeout: 10_000 });
+    await expect(page).toHaveURL(/\/posts\/.+/);
 
     // 3. /posts 목록에서 새 글 제목 확인
-    await page.goto('/posts');
-    await expect(page.getByText(testTitle)).toBeVisible();
+    await page.goto(`${BASE_URL}/posts`);
+    await expect(page.getByText(uniqueTitle)).toBeVisible({ timeout: 10_000 });
   });
 
-  test('Rejection Path: 비로그인 상태에서 /posts/new 접근 시 리다이렉트', async ({ page }) => {
-    // 1. 로그아웃 또는 새 브라우저 컨텍스트
-    // Playwright의 test는 기본적으로 각 테스트마다 격리된 브라우저 컨텍스트를 제공하므로
-    // 별도의 로그아웃 과정 없이 비로그인 상태로 시작합니다.
-    
-    // 2. /posts/new 접속
-    await page.goto('/posts/new');
+  test('실패/제한 경로: 비로그인 상태에서 /posts/new 접근 시 /login 리다이렉트', async () => {
+    // 격리된 새 브라우저 컨텍스트 사용 (쿠키/세션 없음)
+    const browser = await chromium.launch();
+    const context = await browser.newContext();
+    const page = await context.newPage();
 
-    // 3. /login으로 리다이렉트되는지 확인
-    await expect(page).toHaveURL(/.*\/login/);
+    try {
+      await page.goto(`${BASE_URL}/posts/new`);
+
+      // 미들웨어가 /login으로 리다이렉트하는지 URL 검증
+      await page.waitForURL(/\/login/, { timeout: 10_000 });
+      await expect(page).toHaveURL(/\/login/);
+    } finally {
+      await context.close();
+      await browser.close();
+    }
   });
 });
