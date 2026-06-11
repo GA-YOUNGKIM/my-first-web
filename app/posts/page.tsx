@@ -16,9 +16,10 @@ export default async function PostsPage({
   const { search } = await searchParams;
   const supabase = await createClient();
 
+  // 💡 [안전 조치] 에러를 유발하던 author_email을 빼고 기존에 완벽히 동작하던 필드들만 안전하게 select 합니다.
   let queryBuilder = supabase
     .from("posts")
-    .select("id, title, content, created_at, user_id, author_email"); // 💡 작성자 표시를 위해 author_email 컬럼이 있다면 select에 추가합니다.
+    .select("id, title, content, created_at, user_id");
 
   if (search) {
     queryBuilder = queryBuilder.or(`title.ilike.%${search}%,content.ilike.%${search}%`);
@@ -73,10 +74,9 @@ export default async function PostsPage({
           </div>
 
           {postList && postList.length > 0 ? (
-            // 💡 md:grid-cols-2 구조로 태블릿/데스크톱에서는 격자, 모바일에서는 1열 세로 배열로 자동 스케일링됩니다.
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {postList.map((post) => {
-                // 💡 마크다운 이미지 정규식 매칭 분석 및 본문 분리
+                // 본문 텍스트 내 이미지 링크 문자열 추출 및 제거 파싱
                 const imageRegex = /!\[.*?\]\s*\((https?:\/\/[^\s)]+)\)/;
                 const match = post.content ? post.content.match(imageRegex) : null;
                 const cleanContent = post.content ? post.content.replace(imageRegex, "").trim() : "";
@@ -101,9 +101,9 @@ export default async function PostsPage({
                               {new Date(post.created_at).toLocaleDateString("ko-KR")}
                             </time>
                           </div>
-                          {/* 작성자 표시 영역 (디자인 고도화) */}
+                          {/* 💡 author_email 대용으로 깔끔하게 익명 처리하거나, 필요시 다른 고유 아이디 사용 */}
                           <span className="text-[11px] text-muted-foreground/80 max-w-[120px] truncate">
-                            {post.author_email || "익명"}
+                            작성글
                           </span>
                         </div>
 
@@ -112,11 +112,10 @@ export default async function PostsPage({
                         </CardTitle>
                       </CardHeader>
 
-                      {/* 💡 컨텐츠 내부 반응형 미디어 배치 구조 */}
                       <CardContent className="px-4 sm:px-6 space-y-3">
                         <div className="flex flex-col sm:flex-row gap-3 items-start">
 
-                          {/* 이미지가 있을 경우 모바일/데스크톱 규격에 맞는 가변 썸네일 노출 */}
+                          {/* 썸네일 뷰포트 반응형 처리 */}
                           {imageUrl && (
                             <div className="w-full sm:w-24 sm:h-24 h-36 flex-shrink-0 overflow-hidden rounded-xl border border-border bg-muted/30">
                               <img
@@ -129,7 +128,7 @@ export default async function PostsPage({
 
                           {/* 텍스트 내용 */}
                           <p className="line-clamp-3 text-xs sm:text-sm leading-relaxed text-muted-foreground break-all flex-1">
-                            {cleanContent || "사진이 포함된 스토리입니다. 자세한 내용을 읽어보세요."}
+                            {cleanContent || "내용이 포함된 스토리입니다. 자세한 내용을 읽어보세요."}
                           </p>
                         </div>
                       </CardContent>
