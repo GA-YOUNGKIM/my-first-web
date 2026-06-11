@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PostDetailActions } from "@/components/post-detail-actions";
 import { Heart, MessageSquare, Trash2 } from "lucide-react";
-import { getUserFriendlyErrorMessage } from "@/lib/error-message";
 
 export default function PostDetailPage({
   params,
@@ -24,24 +23,24 @@ export default function PostDetailPage({
   const [post, setPost] = useState<any | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string>("");
+
+  // 좋아요 상태 고도화
   const [likesCount, setLikesCount] = useState<number>(0);
+  const [isLikedByMe, setIsLikedByMe] = useState<boolean>(false); // 내가 눌렀는지 여부
   const [isLiking, setIsLiking] = useState<boolean>(false);
 
-  // 댓글 관련 상태 계층 추가
+  // 댓글 관련 상태
   const [comments, setComments] = useState<any[]>([]);
-  const [newComment, setNewComment] = useState<string>(" ");
+  const [newComment, setNewComment] = useState<string>("");
   const [isSubmittingComment, setIsSubmittingComment] = useState<boolean>(false);
 
   useEffect(() => {
-    async function fetchPostAndComments() {
+    async function fetchPostAndData() {
       try {
-        let decodedId = decodeURIComponent(id).trim();
-        decodedId = decodedId.replace(/\/$/, "");
-
+        let decodedId = decodeURIComponent(id).trim().replace(/\/$/, "");
         const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedId);
 
         if (!isValidUUID) {
-          console.error("정규식 검증 실패한 ID 값:", decodedId);
           setErrorMsg("잘못된 형식의 게시글 ID입니다.");
           setLoading(false);
           return;
@@ -49,52 +48,56 @@ export default function PostDetailPage({
 
         const supabase = createClient();
 
-        // 1. 게시글 상세 정보 받아오기
+        // 1. 게시글 상세 조회
         const { data: postData, error: postError } = await supabase
           .from("posts")
           .select("id, title, content, created_at, user_id")
           .eq("id", decodedId)
           .maybeSingle();
 
-        if (postError) {
-          console.error("게시글 상세 조회 실패:", postError);
-          setErrorMsg("게시글 상세를 불러오지 못했습니다.");
+        if (postError || !postData) {
+          setErrorMsg("존재하지 않거나 불러올 수 없는 게시글입니다.");
           return;
         }
-
-        if (!postData) {
-          setErrorMsg("존재하지 않는 게시글입니다.");
-          return;
-        }
-
         setPost(postData);
-        // DB 스키마 예외에 맞춘 로컬 좋아요 카운트 동기화
-        setLikesCount(0);
 
-        // 2. 해당 게시글에 매핑된 실시간 댓글 목록 받아오기
+        // 2. 좋아요 총 개수 및 내가 눌렀는지 실시간 조회
+        const { data: likesData, error: likesError } = await supabase
+          .from("likes")
+          .select("user_id")
+          .eq("post_id", decodedId);
+
+        if (!likesError && likesData) {
+          setLikesCount(likesData.length);
+          // 로그인한 유저의 ID가 likes 목록에 있는지 검사
+          if (user) {
+            setIsLikedByMe(likesData.some((like) => like.user_id === user.id));
+          }
+        }
+
+        // 3. 댓글 목록 받아오기
         const { data: commentData, error: commentError } = await supabase
           .from("comments")
           .select("id, content, created_at, user_id")
           .eq("post_id", decodedId)
           .order("created_at", { ascending: true });
 
-        if (!commentError && commentData) {
-          setComments(commentData);
-        } else if (commentError) {
-          console.error("댓글 로드 실패:", commentError);
-        }
+        if (!commentError && commentData) setComments(commentData);
+
       } catch (err) {
-        console.error("예외 발생:", err);
-        setErrorMsg("게시글 상세를 불러오지 못했습니다.");
+        console.error(err);
+        setErrorMsg("게시글 로드 중 오류가 발생했습니다.");
       } finally {
         setLoading(false);
       }
     }
 
-    fetchPostAndComments();
-  }, [id]);
+    if (!authLoading) {
+      fetchPostAndData();
+    }
+  }, [id, user, authLoading]);
 
-  // 좋아요 클릭 핸들러 (UI 로컬 상태 반영 구조 보존)
+  // ★ 1계정당 1좋아요 (토글 방식: 다시 누르면 취소) 처리 핸들러
   async function handleLike() {
     if (!user) {
       alert("로그인한 사용자만 좋아요를 누를 수 있습니다.");
@@ -105,25 +108,46 @@ export default function PostDetailPage({
     if (isLiking || !post) return;
     setIsLiking(true);
 
+    const supabase = createClient();
+
     try {
-      const nextLikesCount = likesCount + 1;
-      setLikesCount(nextLikesCount);
+      if (isLikedByMe) {
+        // 이미 눌렀다면 ➡️ 좋아요 취소 (DELETE)
+        const { error } = await supabase
+          .from("likes")
+          .delete()
+          .eq("post_id", post.id)
+          .eq("user_id", user.id);
+
+        if (!error) {
+          setLikesCount((prev) => Math.max(0, prev - 1));
+          setIsLikedByMe(false);
+        }
+      } else {
+        // 안 눌렀다면 ➡️ 좋아요 추가 (INSERT)
+        const { error } = await supabase
+          .from("likes")
+          .insert({ post_id: post.id, user_id: user.id });
+
+        if (!error) {
+          setLikesCount((prev) => prev + 1);
+          setIsLikedByMe(true);
+        } else {
+          // 혹시 모를 중복 에러 캐치
+          console.error("좋아요 실패 (이미 존재할 수 있음):", error);
+        }
+      }
     } catch (err) {
-      console.error("좋아요 중 예외 발생:", err);
+      console.error(err);
     } finally {
       setIsLiking(false);
     }
   }
 
-  // 댓글 작성 처리 함수 (INSERT)
+  // 댓글 등록
   async function handleCommentSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!user) {
-      alert("로그인한 사용자만 댓글을 작성할 수 있습니다.");
-      router.push("/login");
-      return;
-    }
-
+    if (!user) return router.push("/login");
     if (!newComment.trim() || isSubmittingComment || !post) return;
     setIsSubmittingComment(true);
 
@@ -131,130 +155,82 @@ export default function PostDetailPage({
       const supabase = createClient();
       const { data, error } = await supabase
         .from("comments")
-        .insert({
-          post_id: post.id,
-          user_id: user.id,
-          content: newComment.trim(),
-        })
-        .select()
-        .single();
+        .insert({ post_id: post.id, user_id: user.id, content: newComment.trim() })
+        .select().single();
 
-      if (error) {
-        console.error("댓글 등록 실패:", error);
-        alert("댓글을 등록하지 못했습니다. RLS 정책이나 테이블 구성을 확인해 주세요.");
-        return;
-      }
-
-      if (data) {
+      if (data && !error) {
         setComments([...comments, data]);
         setNewComment("");
       }
     } catch (err) {
-      console.error("댓글 등록 중 예외 발생:", err);
+      console.error(err);
     } finally {
       setIsSubmittingComment(false);
     }
   }
 
-  // 댓글 삭제 처리 함수 (DELETE)
+  // 댓글 삭제
   async function handleCommentDelete(commentId: string) {
     if (!confirm("댓글을 정말 삭제하시겠습니까?")) return;
-
     try {
       const supabase = createClient();
-      const { error } = await supabase
-        .from("comments")
-        .delete()
-        .eq("id", commentId);
-
-      if (error) {
-        console.error("댓글 삭제 실패:", error);
-        alert("댓글 삭제 권한이 없거나 실패했습니다.");
-        return;
-      }
-
-      setComments(comments.filter((c) => c.id !== commentId));
+      const { error } = await supabase.from("comments").delete().eq("id", commentId);
+      if (!error) setComments(comments.filter((c) => c.id !== commentId));
     } catch (err) {
-      console.error("댓글 삭제 중 예외 발생:", err);
+      console.error(err);
     }
   }
 
   if (loading || authLoading) {
-    return (
-      <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between gap-3">
-            <div className="h-10 w-36 animate-pulse rounded-full bg-muted" />
-            <div className="h-4 w-32 animate-pulse rounded-full bg-muted" />
-          </div>
-          <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm h-64 animate-pulse" />
-        </div>
-      </div>
-    );
+    return <div className="p-8 text-center text-zinc-400">불러오는 중...</div>;
   }
 
   if (errorMsg || !post) {
     return (
-      <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
-        <Card className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
-          <CardContent className="px-6 py-10 text-center text-sm text-muted-foreground">
-            {errorMsg || "게시글을 찾을 수 없습니다."}
-          </CardContent>
-        </Card>
+      <div className="mx-auto max-w-4xl px-4 py-8 text-center text-zinc-500">
+        {errorMsg || "게시글을 찾을 수 없습니다."}
       </div>
     );
   }
 
-  const currentUserId = user?.id ?? null;
-  const canManagePost = currentUserId === post.user_id;
+  const canManagePost = user?.id === post.user_id;
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+    <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-12 animate-in fade-in duration-300">
       <div className="mb-6 flex items-center justify-between gap-3">
-        <Button asChild variant="ghost" className="h-10 px-3 text-muted-foreground hover:text-foreground">
+        <Button asChild variant="ghost" className="h-10 px-3 text-muted-foreground hover:text-foreground rounded-xl">
           <Link href="/posts">← 목록으로 돌아가기</Link>
         </Button>
-        <p className="text-sm text-muted-foreground">읽기 편한 본문 중심 페이지</p>
       </div>
 
-      {/* 게시글 메인 카드 영역 */}
-      <Card className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+      {/* 본문 카드 */}
+      <Card className="overflow-hidden rounded-3xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
         <CardContent className="p-0">
-          <header className="border-b border-border/70 px-5 py-7 text-center sm:px-8 sm:py-8">
-            <div className="mb-4 flex flex-wrap items-center justify-center gap-2 text-xs">
-              <span className="rounded-full bg-muted px-3 py-1 font-semibold uppercase tracking-wide text-muted-foreground">
-                post
-              </span>
-              <time className="font-medium text-muted-foreground" dateTime={post.created_at}>
-                {new Date(post.created_at).toLocaleDateString("ko-KR")}
-              </time>
-            </div>
-
-            <h1 className="mx-auto max-w-3xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-              {post.title}
-            </h1>
-
-            <p className="mt-6 text-xs text-muted-foreground">작성자 ID: {post.user_id}</p>
+          <header className="border-b border-zinc-100 dark:border-zinc-800 px-6 py-8 text-center">
+            <time className="text-xs text-zinc-400">{new Date(post.created_at).toLocaleDateString("ko-KR")}</time>
+            <h1 className="mt-2 text-2xl font-bold text-zinc-900 dark:text-zinc-50 sm:text-3xl">{post.title}</h1>
+            <p className="mt-4 text-[11px] text-zinc-400">작성자: {post.user_id.slice(0, 8)}...</p>
           </header>
 
-          <div className="px-5 py-7 sm:px-8 sm:py-10">
-            <div className="mx-auto max-w-2xl whitespace-pre-wrap text-base leading-8 text-foreground sm:text-[1.05rem]">
-              {post.content}
-            </div>
+          <div className="px-6 py-8 sm:px-10">
+            <div className="whitespace-pre-wrap text-base leading-relaxed text-zinc-800 dark:text-zinc-200">{post.content}</div>
 
-            {/* 좋아요(추천) 버튼 추가 */}
-            <div className="mt-12 flex justify-center border-t border-border/70 pt-6">
+            {/* 영구 보존용 좋아요 버튼 컴포넌트 구조 */}
+            <div className="mt-12 flex justify-center border-t border-zinc-100 dark:border-zinc-800 pt-6">
               <Button
                 type="button"
                 onClick={handleLike}
                 disabled={isLiking}
                 variant="outline"
                 size="lg"
-                className="h-12 gap-2 rounded-full px-6 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all active:scale-95"
+                className={`h-12 gap-2 rounded-full px-6 transition-all active:scale-95 ${isLikedByMe
+                    ? "bg-red-50 dark:bg-red-950/20 text-red-600 border-red-200 dark:border-red-900/50"
+                    : "hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                  }`}
               >
-                <Heart className={`h-5 w-5 ${likesCount > 0 ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
-                <span className="font-semibold text-sm">좋아요</span>
-                <span className="ml-1 rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground font-bold">
+                <Heart className={`h-5 w-5 transition-transform ${isLikedByMe ? "fill-red-500 text-red-500 scale-110" : "text-zinc-400"}`} />
+                <span className="font-semibold text-sm">{isLikedByMe ? "좋아요 취소" : "좋아요"}</span>
+                <span className="ml-1 rounded-full bg-zinc-100 dark:bg-zinc-800 px-2.5 py-0.5 text-xs font-bold">
                   {likesCount}
                 </span>
               </Button>
@@ -263,61 +239,48 @@ export default function PostDetailPage({
         </CardContent>
       </Card>
 
-      {/* 실시간 댓글 UI 컴포넌트 추가 계층 */}
-      <Card className="mt-6 rounded-3xl border border-border bg-card shadow-sm">
+      {/* 댓글 컴포넌트 */}
+      <Card className="mt-6 rounded-3xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
         <CardContent className="p-6 sm:p-8">
-          <div className="mb-6 flex items-center gap-2 border-b border-border/50 pb-4">
-            <MessageSquare className="h-5 w-5 text-muted-foreground" />
-            <h2 className="text-lg font-semibold text-foreground">댓글 ({comments.length})</h2>
+          <div className="mb-6 flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-4">
+            <MessageSquare className="h-5 w-5 text-zinc-400" />
+            <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-50">댓글 ({comments.length})</h2>
           </div>
 
-          {/* 댓글 입력 영역 */}
-          <form onSubmit={handleCommentSubmit} className="mb-8 space-y-3">
+          <form onSubmit={handleCommentSubmit} className="mb-6 space-y-3">
             <textarea
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              placeholder={user ? "댓글을 입력하세요..." : "로그인 후 댓글을 작성할 수 있습니다."}
+              placeholder={user ? "따뜻한 댓글을 남겨보세요..." : "로그인 후 댓글을 작성할 수 있습니다."}
               disabled={!user || isSubmittingComment}
               rows={3}
-              className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none focus:ring-0 disabled:opacity-60 resize-none transition-all"
+              className="w-full rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-transparent px-4 py-3 text-sm focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 resize-none"
             />
             <div className="flex justify-end">
-              <Button type="submit" disabled={!user || !newComment.trim() || isSubmittingComment} className="rounded-xl h-10 px-5 text-sm">
-                {isSubmittingComment ? "등록 중..." : "댓글 등록"}
+              <Button type="submit" disabled={!user || !newComment.trim() || isSubmittingComment} className="rounded-xl h-9 px-4 text-sm">
+                댓글 등록
               </Button>
             </div>
           </form>
 
-          {/* 댓글 출력 리스트 */}
           <div className="space-y-4">
             {comments.length === 0 ? (
-              <p className="text-center text-sm text-muted-foreground py-4">등록된 댓글이 없습니다. 첫 댓글을 남겨보세요!</p>
+              <p className="text-center text-xs text-zinc-400 py-4">첫 댓글을 자리에 채워보세요.</p>
             ) : (
               comments.map((comment) => (
-                <div key={comment.id} className="group border-b border-border/40 pb-4 last:border-b-0 last:pb-0 flex items-start justify-between gap-4">
-                  <div className="space-y-1 max-w-[85%]">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-muted-foreground truncate max-w-[150px]">
-                        {comment.user_id === post.user_id ? "작성자" : `유저 (${comment.user_id.slice(0, 4)})`}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground/70">
-                        {new Date(comment.created_at).toLocaleDateString("ko-KR")}
-                      </span>
+                <div key={comment.id} className="group flex items-start justify-between border-b border-zinc-50 dark:border-zinc-800/50 pb-4 last:border-0">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-[11px] font-semibold text-zinc-400">
+                      <span>{comment.user_id === post.user_id ? "작성자" : `유저(${comment.user_id.slice(0, 4)})`}</span>
+                      <span>•</span>
+                      <span>{new Date(comment.created_at).toLocaleDateString("ko-KR")}</span>
                     </div>
-                    <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{comment.content}</p>
+                    <p className="text-sm text-zinc-700 dark:text-zinc-300">{comment.content}</p>
                   </div>
-
-                  {/* 댓글 작성자만 삭제 버튼 활성화 */}
                   {user?.id === comment.user_id && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleCommentDelete(comment.id)}
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
+                    <button onClick={() => handleCommentDelete(comment.id)} className="text-zinc-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </button>
                   )}
                 </div>
               ))
@@ -326,23 +289,7 @@ export default function PostDetailPage({
         </CardContent>
       </Card>
 
-      <Card className="mt-6 rounded-3xl border border-border bg-background">
-        <CardContent className="flex flex-col items-center gap-4 px-6 py-8 text-center sm:px-8">
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-foreground">도움이 되셨나요?</h3>
-            <p className="text-sm leading-7 text-muted-foreground">
-              더 많은 글을 읽고 싶다면 목록으로 돌아가 보세요.
-            </p>
-          </div>
-          <Button asChild className="h-11 px-6 font-medium">
-            <Link href="/posts">다른 글 보기</Link>
-          </Button>
-        </CardContent>
-      </Card>
-
-      {canManagePost ? (
-        <PostDetailActions postId={String(post.id)} postUserId={post.user_id} />
-      ) : null}
+      {canManagePost && <PostDetailActions postId={String(post.id)} postUserId={post.user_id} />}
     </div>
   );
 }
